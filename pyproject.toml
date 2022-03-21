@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "cargo_export"
+version = "0.1.0"
+description = "Export utilities for mediawiki cargo tables"
+authors = ["Stefan Kuznetsov <neosloth@posteo.net>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.27.1"
+
+[tool.poetry.dev-dependencies]
+black = "^22.1.0"
+mypy = "^0.940"
+pytest = "^7.1.0"
+types-requests = "^2.27.12"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.mypy]
+disallow_untyped_defs = true
+warn_return_any = true
