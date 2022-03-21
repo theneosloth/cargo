@@ -1,9 +1,10 @@
 """Cargo wrapper."""
 from dataclasses import dataclass, field
 from functools import lru_cache
-from typing import TypedDict
+from typing import TypedDict, Any, Dict
 
 import requests
+import copy
 
 WIKI_DOMAIN = "https://dreamcancel.com"
 WIKI_BASE_PATH = "/wiki"
@@ -17,7 +18,7 @@ CARGO_TABLES = [
 
 # As documented here:
 # https://discoursedb.org/w/api.php?action=help&modules=cargoquery
-class CargoParameter(TypedDict, total=False):
+class CargoParameters(TypedDict, total=False):
     """A dict that only permits valid cargo parameters."""
 
     limit: int
@@ -29,7 +30,6 @@ class CargoParameter(TypedDict, total=False):
     having: str
     order_by: str
     offset: int
-
 
 @dataclass
 class Cargo:
@@ -57,16 +57,9 @@ def export_endpoint(cargo: Cargo) -> str:
 
 
 # @lru_cache(maxsize=LRU_MAXSIZE)
-def cargo_export(cargo: Cargo, params: CargoParameter) -> dict:
+def cargo_export(cargo: Cargo, params: CargoParameters) -> Any:
     """Call the export point."""
     export = export_endpoint(cargo)
-    r = requests.get(export, params)
+    # Requests types do not properly handle typeddicts, however, int and str keys and values are supported
+    r = requests.get(export, params=params) # type: ignore
     return r.json()
-
-valid_fields = ["chara", "moveId", "orderId", "input","name", "header", "version", "images", "hitboxes", "damage", "guard", "cancel", "startup", "active", "recovery", "hitadv", "blockadv", "invul", "stun", "guardDamage"]
-
-field_param = ",".join(valid_fields)
-
-cargo = Cargo()
-c = cargo_export(cargo, {"tables": "MoveData_KOFXV", "fields": field_param})
-print(c)
