@@ -1,6 +1,6 @@
-from cargo import Cargo, api_endpoint, export_endpoint, index_endpoint
+from . import cargo
 
-test_cargo = Cargo(
+test_cargo = cargo.Cargo(
     "https://example.com",
     "/wiki/superfluous",
     "?title=Special:CargoExport",
@@ -9,11 +9,11 @@ test_cargo = Cargo(
 
 def test_endpoints() -> None:
     assert (
-        index_endpoint(test_cargo) == "https://example.com/wiki/superfluous/index.php"
+        test_cargo.index_endpoint() == "https://example.com/wiki/superfluous/index.php"
     )
-    assert api_endpoint(test_cargo) == "https://example.com/wiki/superfluous/api.php"
+    assert test_cargo.api_endpoint() == "https://example.com/wiki/superfluous/api.php"
 
     assert (
-        export_endpoint(test_cargo)
+        test_cargo.export_endpoint()
         == "https://example.com/wiki/superfluous/index.php?title=Special:CargoExport&format=json"
     )

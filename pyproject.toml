@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cargo_export"
-version = "0.1.0"
+version = "0.0.1"
 description = "Export utilities for mediawiki cargo tables"
 authors = ["Stefan Kuznetsov <neosloth@posteo.net>"]
 
@@ -13,6 +13,7 @@ black = "^22.1.0"
 mypy = "^0.940"
 pytest = "^7.1.0"
 types-requests = "^2.27.12"
+isort = "^5.10.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
