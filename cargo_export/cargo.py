@@ -1,5 +1,5 @@
 """Cargo wrapper."""
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from typing import Any, TypedDict, cast
 
 import requests
@@ -35,9 +35,10 @@ class Cargo:
     domain: str = WIKI_DOMAIN
     base_path: str = WIKI_BASE_PATH
     table_export_path: str = WIKI_TABLE_EXPORT_PATH
-    headers: dict[str, str] = field(
-        default_factory=lambda: {"User-Agent": f"cargo_export/{__version__}"}
-    )
+    headers: InitVar[dict[str, str]] = field(default_factory=list)
+
+    def __post__init(self) -> None:
+        self.headers = {"User-Agent": f"cargo_export/{__version__}"}
 
     def index_endpoint(self) -> str:
         """Construct a mediawiki API endpoint for a given mediawiki site."""
