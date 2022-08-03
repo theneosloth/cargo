@@ -1,14 +1,16 @@
 """Cargo wrapper."""
-import json
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import Any, List, TypedDict, cast
 
 import requests
+import requests_cache
 
 from cargo.__version__ import VERSION
-from cargo.cache import CargoCache
 
-PARAMS_LIMIT_DEFAULT = 50
+DEFAULT_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
+DEFAULT_TABLES_PATH = "Special:CargoTables"
+DEFAULT_PARAMS_LIMIT = 50
 
 sql_query = str
 cargo_query = str | List[str]
@@ -37,6 +39,7 @@ class Cargo:
     domain: str
     base_path: str
     table_export_path: str
+    tables_path: str
     headers: dict[str, str] = field(init=False)
 
     def __post_init__(self) -> None:
@@ -55,6 +58,10 @@ class Cargo:
         """Construct a cargo export endpoint for a given mediawiki site."""
         return f"{self.index_endpoint()}{self.table_export_path}&format=json"
 
+    def tables_endpoint(self) -> str:
+        """Construct a cargo export endpoint for a given mediawiki site."""
+        return f"{self.index_endpoint()}{self.tables_path}"
+
 
 class CargoError(Exception):
     """Base class for cargo thrown exceptions."""
@@ -62,29 +69,25 @@ class CargoError(Exception):
     pass
 
 
-def cargo_export(
-    cargo: Cargo, params: CargoParameters, cache: CargoCache | None = None
-) -> Any | CargoError:
-    """Call the export point."""
+def cargo_export(cargo: Cargo, params: CargoParameters) -> Any:
+    """Call the export point. Caches the URL."""
     req_params = params.copy()
 
     if "limit" not in req_params:
-        req_params["limit"] = PARAMS_LIMIT_DEFAULT
+        req_params["limit"] = DEFAULT_PARAMS_LIMIT
 
     export = cargo.export_endpoint()
 
-    req = requests.Request(export, headers=cargo.headers, params=cast(dict, req_params))
+    req = requests.Request(
+        "GET", export, headers=cargo.headers, params=cast(dict, req_params)
+    )
     prepped = req.prepare()
-    s = requests.Session()
+
+    s = requests_cache.CachedSession()
     url = prepped.url
 
     if url is None:
         raise CargoError("Failed to construct url.")
-
-    if cache is not None:
-        cached = cache.get(url)
-        if cached:
-            return json.loads(cached)
 
     try:
         request = s.send(prepped)
@@ -100,14 +103,5 @@ def cargo_export(
     res = request.json()
     if "error" in res:
         raise CargoError(res["error"])
-
-    if cache is not None:
-        cache.set(
-            url,
-            request.content,
-        )
-    import pdb
-
-    pdb.set_trace()
 
     return res

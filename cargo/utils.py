@@ -1,4 +1,5 @@
-"""Miscellaneous utility."""
+"""Miscellaneous utility functions."""
+from dataclasses import field, make_dataclass
 
 
 def where(params: dict) -> str:

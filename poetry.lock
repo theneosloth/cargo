@@ -1,4 +1,12 @@
 [[package]]
+name = "appdirs"
+version = "1.4.4"
+description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "astroid"
 version = "2.11.5"
 description = "An abstract syntax tree for Python with inference support."
@@ -9,14 +17,6 @@ python-versions = ">=3.6.2"
 [package.dependencies]
 lazy-object-proxy = ">=1.4.0"
 wrapt = ">=1.11,<2"
-
-[[package]]
-name = "async-timeout"
-version = "4.0.2"
-description = "Timeout context manager for asyncio programs"
-category = "main"
-optional = false
-python-versions = ">=3.6"
 
 [[package]]
 name = "atomicwrites"
@@ -30,7 +30,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 name = "attrs"
 version = "21.4.0"
 description = "Classes Without Boilerplate"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -53,6 +53,21 @@ pycodestyle = ">=2.8.0"
 toml = "*"
 
 [[package]]
+name = "beautifulsoup4"
+version = "4.11.1"
+description = "Screen-scraping library"
+category = "main"
+optional = false
+python-versions = ">=3.6.0"
+
+[package.dependencies]
+soupsieve = ">1.2"
+
+[package.extras]
+html5lib = ["html5lib"]
+lxml = ["lxml"]
+
+[[package]]
 name = "black"
 version = "22.3.0"
 description = "The uncompromising code formatter."
@@ -72,6 +87,17 @@ colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.7.4)"]
 jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)"]
+
+[[package]]
+name = "cattrs"
+version = "1.10.0"
+description = "Composable complex class support for attrs and dataclasses."
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+attrs = ">=20"
 
 [[package]]
 name = "certifi"
@@ -110,20 +136,6 @@ description = "Cross-platform colored terminal text."
 category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[[package]]
-name = "deprecated"
-version = "1.2.13"
-description = "Python @deprecated decorator to deprecate old python classes, functions or methods."
-category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[package.dependencies]
-wrapt = ">=1.10,<2"
-
-[package.extras]
-dev = ["tox", "bump2version (<1)", "sphinx (<2)", "importlib-metadata (<3)", "importlib-resources (<4)", "configparser (<5)", "sphinxcontrib-websupport (<2)", "zipp (<2)", "PyTest (<5)", "PyTest-Cov (<2.6)", "pytest", "pytest-cov"]
 
 [[package]]
 name = "dill"
@@ -240,7 +252,7 @@ python-versions = "*"
 name = "packaging"
 version = "21.3"
 description = "Core utilities for Python packages"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
 
@@ -381,7 +393,7 @@ test = ["tox", "pytest", "pytest-cov", "coverage"]
 name = "pyparsing"
 version = "3.0.9"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6.8"
 
@@ -476,23 +488,6 @@ test = ["pylint (>=2.5.0)", "pytest", "pytest-cov", "coverage", "numpy", "pandas
 yapf = ["yapf"]
 
 [[package]]
-name = "redis"
-version = "4.3.1"
-description = "Python client for Redis database and key-value store"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-async-timeout = ">=4.0.2"
-deprecated = ">=1.2.3"
-packaging = ">=20.4"
-
-[package.extras]
-hiredis = ["hiredis (>=1.0.0)"]
-ocsp = ["cryptography (>=36.0.1)", "pyopenssl (==20.0.1)", "requests (>=2.26.0)"]
-
-[[package]]
 name = "requests"
 version = "2.27.1"
 description = "Python HTTP for Humans."
@@ -511,6 +506,33 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)", "win-inet-pton"]
 use_chardet_on_py3 = ["chardet (>=3.0.2,<5)"]
 
 [[package]]
+name = "requests-cache"
+version = "0.9.4"
+description = "A transparent persistent cache for the requests library"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+appdirs = ">=1.4.4,<2.0.0"
+attrs = ">=21.2,<22.0"
+cattrs = ">=1.8,<2.0"
+requests = ">=2.22,<3.0"
+url-normalize = ">=1.4,<2.0"
+urllib3 = ">=1.25.5,<2.0.0"
+
+[package.extras]
+dynamodb = ["boto3 (>=1.15,<2.0)", "botocore (>=1.18,<2.0)"]
+all = ["boto3 (>=1.15,<2.0)", "botocore (>=1.18,<2.0)", "pymongo (>=3)", "redis (>=3)", "itsdangerous (>=2.0,<3.0)", "pyyaml (>=5.4)", "ujson (>=4.0)"]
+mongodb = ["pymongo (>=3)"]
+redis = ["redis (>=3)"]
+bson = ["bson (>=0.5)"]
+security = ["itsdangerous (>=2.0,<3.0)"]
+yaml = ["pyyaml (>=5.4)"]
+json = ["ujson (>=4.0)"]
+docs = ["furo (>=2021.9.8)", "linkify-it-py (>=1.0.1,<2.0.0)", "myst-parser (>=0.15.1,<0.16.0)", "sphinx (==4.3.0)", "sphinx-autodoc-typehints (>=1.11,<2.0)", "sphinx-automodapi (>=0.13,<0.15)", "sphinx-copybutton (>=0.3,<0.5)", "sphinx-inline-tabs (>=2022.1.2b11)", "sphinx-notfound-page", "sphinx-panels (>=0.6,<0.7)", "sphinxcontrib-apidoc (>=0.3,<0.4)"]
+
+[[package]]
 name = "rope"
 version = "1.0.0"
 description = "a python refactoring library..."
@@ -522,12 +544,28 @@ python-versions = ">=3"
 dev = ["build", "pytest", "pytest-timeout"]
 
 [[package]]
+name = "six"
+version = "1.16.0"
+description = "Python 2 and 3 compatibility utilities"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+
+[[package]]
 name = "snowballstemmer"
 version = "2.2.0"
 description = "This package provides 29 stemmers for 28 languages generated from Snowball algorithms."
 category = "dev"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "soupsieve"
+version = "2.3.2.post1"
+description = "A modern CSS selector implementation for Beautiful Soup."
+category = "main"
+optional = false
+python-versions = ">=3.6"
 
 [[package]]
 name = "toml"
@@ -544,6 +582,14 @@ description = "A lil' TOML parser"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
+
+[[package]]
+name = "types-beautifulsoup4"
+version = "4.11.1"
+description = "Typing stubs for beautifulsoup4"
+category = "dev"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "types-redis"
@@ -589,6 +635,17 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "url-normalize"
+version = "1.4.3"
+description = "URL normalization for Python"
+category = "main"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
+
+[package.dependencies]
+six = "*"
+
+[[package]]
 name = "urllib3"
 version = "1.26.9"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -605,7 +662,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 name = "wrapt"
 version = "1.14.1"
 description = "Module for decorators, wrappers and monkey patching."
-category = "main"
+category = "dev"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 
@@ -620,16 +677,16 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "19cb07a1808a15f4419bd6ab111d405d49c0e77405dcee553ba87ab0f7ac3e42"
+content-hash = "efc63f28b843c4fd2bfbea271f06aae2f60322346b6e9c1e1445e670c16da562"
 
 [metadata.files]
+appdirs = [
+    {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
+    {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
+]
 astroid = [
     {file = "astroid-2.11.5-py3-none-any.whl", hash = "sha256:14ffbb4f6aa2cf474a0834014005487f7ecd8924996083ab411e7fa0b508ce0b"},
     {file = "astroid-2.11.5.tar.gz", hash = "sha256:f4e4ec5294c4b07ac38bab9ca5ddd3914d4bf46f9006eb5c0ae755755061044e"},
-]
-async-timeout = [
-    {file = "async-timeout-4.0.2.tar.gz", hash = "sha256:2163e1640ddb52b7a8c80d0a67a08587e5d245cc9c553a74a847056bc2976b15"},
-    {file = "async_timeout-4.0.2-py3-none-any.whl", hash = "sha256:8ca1e4fcf50d07413d66d1a5e416e42cfdf5851c981d679a09851a6853383b3c"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
@@ -642,6 +699,10 @@ attrs = [
 autopep8 = [
     {file = "autopep8-1.6.0-py2.py3-none-any.whl", hash = "sha256:ed77137193bbac52d029a52c59bec1b0629b5a186c495f1eb21b126ac466083f"},
     {file = "autopep8-1.6.0.tar.gz", hash = "sha256:44f0932855039d2c15c4510d6df665e4730f2b8582704fa48f9c55bd3e17d979"},
+]
+beautifulsoup4 = [
+    {file = "beautifulsoup4-4.11.1-py3-none-any.whl", hash = "sha256:58d5c3d29f5a36ffeb94f02f0d786cd53014cf9b3b3951d42e0080d8a9498d30"},
+    {file = "beautifulsoup4-4.11.1.tar.gz", hash = "sha256:ad9aa55b65ef2808eb405f46cf74df7fcb7044d5cbc26487f96eb2ef2e436693"},
 ]
 black = [
     {file = "black-22.3.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:2497f9c2386572e28921fa8bec7be3e51de6801f7459dffd6e62492531c47e09"},
@@ -668,6 +729,10 @@ black = [
     {file = "black-22.3.0-py3-none-any.whl", hash = "sha256:bc58025940a896d7e5356952228b68f793cf5fcb342be703c3a2669a1488cb72"},
     {file = "black-22.3.0.tar.gz", hash = "sha256:35020b8886c022ced9282b51b5a875b6d1ab0c387b31a065b84db7c33085ca79"},
 ]
+cattrs = [
+    {file = "cattrs-1.10.0-py3-none-any.whl", hash = "sha256:35dd9063244263e63bd0bd24ea61e3015b00272cead084b2c40d788b0f857c46"},
+    {file = "cattrs-1.10.0.tar.gz", hash = "sha256:211800f725cdecedcbcf4c753bbd22d248312b37d130f06045434acb7d9b34e1"},
+]
 certifi = [
     {file = "certifi-2021.10.8-py2.py3-none-any.whl", hash = "sha256:d62a0163eb4c2344ac042ab2bdf75399a71a2d8c7d47eac2e2ee91b9d6339569"},
     {file = "certifi-2021.10.8.tar.gz", hash = "sha256:78884e7c1d4b00ce3cea67b44566851c4343c120abd683433ce934a68ea58872"},
@@ -683,10 +748,6 @@ click = [
 colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
-]
-deprecated = [
-    {file = "Deprecated-1.2.13-py2.py3-none-any.whl", hash = "sha256:64756e3e14c8c5eea9795d93c524551432a0be75629f8f29e67ab8caf076c76d"},
-    {file = "Deprecated-1.2.13.tar.gz", hash = "sha256:43ac5335da90c31c24ba028af536a91d41d53f9e6901ddb021bcc572ce44e38d"},
 ]
 dill = [
     {file = "dill-0.3.4-py2.py3-none-any.whl", hash = "sha256:7e40e4a70304fd9ceab3535d36e58791d9c4a776b38ec7f7ec9afc8d3dca4d4f"},
@@ -851,21 +912,29 @@ python-lsp-server = [
     {file = "python-lsp-server-1.4.1.tar.gz", hash = "sha256:be7f83298af9f0951a93972cafc9db04fd7cf5c05f20812515275f0ba70e342f"},
     {file = "python_lsp_server-1.4.1-py3-none-any.whl", hash = "sha256:e6bd0cf9530d8e2ba3b9c0ae10b99a16c33808bc9a7266afecc3900017b35326"},
 ]
-redis = [
-    {file = "redis-4.3.1-py3-none-any.whl", hash = "sha256:84316970995a7adb907a56754d2b92d88fc2d252963dc5ac34c88f0f1a22c25d"},
-    {file = "redis-4.3.1.tar.gz", hash = "sha256:94b617b4cd296e94991146f66fc5559756fbefe9493604f0312e4d3298ac63e9"},
-]
 requests = [
     {file = "requests-2.27.1-py2.py3-none-any.whl", hash = "sha256:f22fa1e554c9ddfd16e6e41ac79759e17be9e492b3587efa038054674760e72d"},
     {file = "requests-2.27.1.tar.gz", hash = "sha256:68d7c56fd5a8999887728ef304a6d12edc7be74f1cfa47714fc8b414525c9a61"},
+]
+requests-cache = [
+    {file = "requests-cache-0.9.4.tar.gz", hash = "sha256:04bb1212bbefba122080163530555f36e64fcd517ef8f90e289ef76f7ae055da"},
+    {file = "requests_cache-0.9.4-py3-none-any.whl", hash = "sha256:edc51d4ba3f1bcacf100aa6097d0c4ae4c787fe13dcc4b2d3a6ce3064482b072"},
 ]
 rope = [
     {file = "rope-1.0.0-py3-none-any.whl", hash = "sha256:67749b582d57954f288b0441fae93e8f4c166d7e93fc29c430bd4db28ec904d0"},
     {file = "rope-1.0.0.tar.gz", hash = "sha256:16f652d3002296778d463db329da6a05d914a4dbde30ea6da76362da06c0ebb7"},
 ]
+six = [
+    {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
+    {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+]
 snowballstemmer = [
     {file = "snowballstemmer-2.2.0-py2.py3-none-any.whl", hash = "sha256:c8e1716e83cc398ae16824e5572ae04e0d9fc2c6b985fb0f900f5f0c96ecba1a"},
     {file = "snowballstemmer-2.2.0.tar.gz", hash = "sha256:09b16deb8547d3412ad7b590689584cd0fe25ec8db3be37788be3810cbf19cb1"},
+]
+soupsieve = [
+    {file = "soupsieve-2.3.2.post1-py3-none-any.whl", hash = "sha256:3b2503d3c7084a42b1ebd08116e5f81aadfaea95863628c80a3b774a11b7c759"},
+    {file = "soupsieve-2.3.2.post1.tar.gz", hash = "sha256:fc53893b3da2c33de295667a0e19f078c14bf86544af307354de5fcf12a3f30d"},
 ]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
@@ -874,6 +943,10 @@ toml = [
 tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+types-beautifulsoup4 = [
+    {file = "types-beautifulsoup4-4.11.1.tar.gz", hash = "sha256:16593775a5e2ac9bc80a5a316ad62c106f080178cf7d1e9691bde017725b2c39"},
+    {file = "types_beautifulsoup4-4.11.1-py3-none-any.whl", hash = "sha256:b2feb44f7060379bbec9451580ac24f6dfa7ae97652724a01a0ef92847e002d5"},
 ]
 types-redis = [
     {file = "types-redis-4.2.2.tar.gz", hash = "sha256:616e5331e957832321c14a4bd206b41f967657cf360f62419b21588880af3933"},
@@ -942,6 +1015,10 @@ ujson = [
     {file = "ujson-5.2.0-pp38-pypy38_pp73-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:729af63e4de30c54b527b54b4100266f79833c1e8ba35e784f01b44c2aca88d8"},
     {file = "ujson-5.2.0-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:25522c674b35c33f375586ac98d92ce731e79059424507ecbccbfcbce832d597"},
     {file = "ujson-5.2.0.tar.gz", hash = "sha256:163191b88842d874e081707d35de2e205e0e396e70fd068d1038879bca8b17ad"},
+]
+url-normalize = [
+    {file = "url-normalize-1.4.3.tar.gz", hash = "sha256:d23d3a070ac52a67b83a1c59a0e68f8608d1cd538783b401bc9de2c0fac999b2"},
+    {file = "url_normalize-1.4.3-py2.py3-none-any.whl", hash = "sha256:ec3c301f04e5bb676d333a7fa162fa977ad2ca04b7e652bfc9fac4e405728eed"},
 ]
 urllib3 = [
     {file = "urllib3-1.26.9-py2.py3-none-any.whl", hash = "sha256:44ece4d53fb1706f667c9bd1c648f5469a2ec925fcf3a776667042d645472c14"},
