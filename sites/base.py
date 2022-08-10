@@ -70,10 +70,10 @@ class BaseFetcher:
             "where": f'chara="{char}" AND input="{input}"',
         }
         result = self._get(exact_params)
+        if result:
+            return result
 
-        if len(result) == 0:
-            fuzzy_params: CargoParameters = {
-                "where": f'chara="{char}" AND input LIKE "%{input}%"',
-            }
-            return self._get(fuzzy_params)
-        return result
+        fuzzy_params: CargoParameters = {
+            "where": f'chara="{char}" AND input LIKE "%{input}%"',
+        }
+        return self._get(fuzzy_params)
