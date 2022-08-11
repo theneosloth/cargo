@@ -1,4 +1,4 @@
-from dataclasses import field, make_dataclass
+from dataclasses import make_dataclass
 from typing import Any, NewType, cast
 
 from bs4 import BeautifulSoup

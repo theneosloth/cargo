@@ -1,7 +1,7 @@
 """A wrapper around dreamcancel.com cargo export endpoints."""
 
 from dataclasses import fields
-from typing import List
+from typing import List, Optional
 
 from cargo.cargo import Cargo, CargoParameters, cargo_export
 from cargo.scrape import Move, parse_cargo_table
@@ -12,7 +12,6 @@ class BaseFetcher:
 
     cargo: Cargo
     table_name: str
-    move: type
 
     def __init__(
         self,
@@ -26,7 +25,14 @@ class BaseFetcher:
         self.cargo = Cargo(domain, base_path, table_export_path, tables_path)
         self.table_name = table_name
 
-        self.move = parse_cargo_table(self.cargo, self.table_name)
+        self._move: Optional[Move] = None
+
+    @property
+    def move(self) -> type:
+        """Lazy load the cargo table definition."""
+        if self._move is None:
+            self._move = parse_cargo_table(self.cargo, self.table_name)
+        return self._move
 
     def _list_to_moves(self, moves: list) -> List[Move]:
         """Copy all keys from res to Character."""
@@ -40,7 +46,7 @@ class BaseFetcher:
 
         return res
 
-    def _get(self, params: CargoParameters) -> List[Move]:
+    def get(self, params: CargoParameters) -> List[Move]:
         """Wrap around cargo_export."""
         field_param = ",".join([f.name for f in fields(self.move)])
 
@@ -56,24 +62,24 @@ class BaseFetcher:
             case _:
                 raise TypeError("Endpoint expected to return list.")
 
-    def get_character(self, char: str) -> List[Move]:
+    def get_character_moves(self, char: str) -> List[Move]:
         """Return the movelist for a character CHARA."""
         params: CargoParameters = {
             "where": f"chara='{char}'",
         }
-        result = self._get(params)
+        result = self.get(params)
         return result
 
-    def get_move(self, char: str, input: str) -> List[Move]:
+    def get_moves(self, char: str, input: str) -> List[Move]:
         """Return the movelist for a character CHARA."""
         exact_params: CargoParameters = {
             "where": f'chara="{char}" AND input="{input}"',
         }
-        result = self._get(exact_params)
+        result = self.get(exact_params)
         if result:
             return result
 
         fuzzy_params: CargoParameters = {
             "where": f'chara="{char}" AND input LIKE "%{input}%"',
         }
-        return self._get(fuzzy_params)
+        return self.get(fuzzy_params)
