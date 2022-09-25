@@ -2,7 +2,7 @@
 
 from functools import partial
 
-from .base import BaseFetcher
+from .base import CargoFetcher
 
 WIKI_DOMAIN = "https://dreamcancel.com"
 WIKI_BASE_PATH = "/wiki"
@@ -11,7 +11,7 @@ WIKI_TABLES_PATH = "/Special:CargoTables"
 
 
 init_fetcher = partial(
-    BaseFetcher, WIKI_DOMAIN, WIKI_BASE_PATH, WIKI_TABLE_EXPORT_PATH, WIKI_TABLES_PATH
+    CargoFetcher, WIKI_DOMAIN, WIKI_BASE_PATH, WIKI_TABLE_EXPORT_PATH, WIKI_TABLES_PATH
 )
 
 KOFXV = init_fetcher("MoveData_KOFXV")

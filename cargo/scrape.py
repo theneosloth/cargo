@@ -1,5 +1,6 @@
+"""Scrape wikipedia for type definitons of a cargo table."""
 from dataclasses import make_dataclass
-from typing import Any, NewType, cast
+from typing import NewType, cast
 
 from bs4 import BeautifulSoup
 from requests import get
@@ -13,21 +14,17 @@ Move = NewType("Move", type)
 
 def name_to_type(name: str) -> type:
     """Match a name to a type."""
-    name_dict = {
-        "list of": list[str],
-        "string": str,
-        "wikitext": str,
-    }
-
-    found = ""
-    for n, _ in name_dict.items():
-        if n in name.lower():
-            found = n
-
-    if found == "":
-        raise CargoError(f'Unknown type: "{name}"')
-
-    return name_dict[found]
+    match name.lower().split():
+        case ["integer"]:
+            return int
+        case ["list", "of", "integer"]:
+            return list[int]
+        case ["string" | "wikitext", *_]:
+            return str
+        case ["list", "of", _]:
+            return list[str]
+        case default:
+            raise CargoError(f'Unknown type: "{default}"')
 
 
 def parse_cargo_table(cargo: Cargo, table_name: str) -> Move:

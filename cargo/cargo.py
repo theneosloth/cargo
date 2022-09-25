@@ -1,6 +1,5 @@
 """Cargo wrapper."""
 from dataclasses import dataclass, field
-from functools import lru_cache
 from typing import Any, List, TypedDict, cast
 
 import requests
@@ -70,6 +69,7 @@ class CargoError(Exception):
 
 
 def cargo_export(cargo: Cargo, params: CargoParameters) -> Any:
+    # TODO: Leaky Typing
     """Call the export point. Caches the URL."""
     req_params = params.copy()
 
