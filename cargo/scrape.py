@@ -21,7 +21,7 @@ def name_to_type(name: str) -> type:
             return list[int]
         case ["string" | "wikitext", *_]:
             return str
-        case ["list", "of", _]:
+        case ["list", "of", *_]:
             return list[str]
         case default:
             raise CargoError(f'Unknown type: "{default}"')
