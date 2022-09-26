@@ -17,17 +17,14 @@ def test_init() -> None:
 
 
 def test_endpoints() -> None:
-    assert (
-        test_cargo.index_endpoint() == "https://example.com/wiki/superfluous/index.php"
-    )
-    assert test_cargo.api_endpoint() == "https://example.com/wiki/superfluous/api.php"
+    assert test_cargo.index_endpoint() == "https://example.com/wiki/superfluous"
 
     assert (
         test_cargo.export_endpoint()
-        == "https://example.com/wiki/superfluous/index.php?title=Special:CargoExport&format=json"
+        == "https://example.com/wiki/superfluous?title=Special:CargoExport&format=json"
     )
 
     assert (
         test_cargo.tables_endpoint()
-        == "https://example.com/wiki/superfluous/index.php/Special:CargoTables"
+        == "https://example.com/wiki/superfluous/Special:CargoTables"
     )

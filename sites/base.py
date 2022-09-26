@@ -1,27 +1,14 @@
-"""Generic wrapper for a MediaWiki cargo page"""
-from abc import ABC, abstractmethod
+"""Generic wrapper for a MediaWiki cargo page."""
+
+from collections.abc import Mapping
 from dataclasses import fields
-from typing import List, Optional, TypeVar
+from typing import Iterator, List, Optional
 
 from cargo.cargo import Cargo, CargoParameters, cargo_export
 from cargo.scrape import Move, parse_cargo_table
 
 
-class Fetcher(ABC):
-    """An interface for fetchers."""
-
-    @abstractmethod
-    def __getitem__(self, query: str) -> List:
-        """Accept a query and return a list of moves."""
-        pass
-
-    @abstractmethod
-    def __contains__(self, query: str) -> bool:
-        """Check if Q is in the collection."""
-        pass
-
-
-class CargoFetcher(Fetcher):
+class CargoFetcher(Mapping):
     """Fetcher more specific to Fighting game wikis."""
 
     cargo: Cargo
@@ -40,22 +27,6 @@ class CargoFetcher(Fetcher):
         self.table_name = table_name
 
         self._move: Optional[Move] = None
-
-    def __getitem__(self, char: str) -> List[Move]:
-        """Return the movelist for a character CHARA."""
-        params: CargoParameters = {
-            "where": f"chara='{char}'",
-        }
-        result = self.get(params)
-        return result
-
-    def __contains__(self, char: str) -> bool:
-        """Check if a character exists."""
-        params: CargoParameters = {
-            "where": f"chara='{char}'",
-        }
-        result = self.get(params)
-        return len(result) > 0
 
     @property
     def move(self) -> type:
@@ -76,7 +47,7 @@ class CargoFetcher(Fetcher):
 
         return res
 
-    def get(self, params: CargoParameters) -> List[Move]:
+    def _get(self, params: CargoParameters) -> List[Move]:
         """Wrap around cargo_export."""
         field_param = ",".join([f.name for f in fields(self.move)])
 
@@ -86,22 +57,38 @@ class CargoFetcher(Fetcher):
         }
 
         result = cargo_export(self.cargo, merged_params | params)
-        match result:
-            case list():
-                return self._list_to_moves(result)
-            case _:
-                raise TypeError("Endpoint expected to return list.")
+        return self._list_to_moves(result)
 
     def get_moves(self, char: str, input: str) -> List[Move]:
         """Return the movelist for a character CHARA."""
         exact_params: CargoParameters = {
             "where": f'chara="{char}" AND input="{input}"',
         }
-        result = self.get(exact_params)
+        result = self._get(exact_params)
         if result:
             return result
 
         fuzzy_params: CargoParameters = {
             "where": f'chara="{char}" AND input LIKE "%{input}%"',
         }
-        return self.get(fuzzy_params)
+        return self._get(fuzzy_params)
+
+    def __getitem__(self, char: str) -> List[Move]:
+        """Return the movelist for a character CHARA."""
+        params: CargoParameters = {
+            "where": f"chara='{char}'",
+        }
+        result = self._get(params)
+        return result
+
+    def __iter__(self) -> Iterator[Move]:
+        """Iterate over all characters."""
+        raise NotImplementedError
+
+    def __len__(self) -> int:
+        """Get the character count."""
+        length_params: CargoParameters = {
+            "group_by": "_pageName",
+            "tables": self.table_name,
+        }
+        return len(cargo_export(self.cargo, length_params))

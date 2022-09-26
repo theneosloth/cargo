@@ -47,11 +47,7 @@ class Cargo:
 
     def index_endpoint(self) -> str:
         """Construct a mediawiki API endpoint for a given mediawiki site."""
-        return f"{self.domain}{self.base_path}/index.php"
-
-    def api_endpoint(self) -> str:
-        """Construct a mediawiki API endpoint for a given mediawiki site."""
-        return f"{self.domain}{self.base_path}/api.php"
+        return f"{self.domain}{self.base_path}"
 
     def export_endpoint(self) -> str:
         """Construct a cargo export endpoint for a given mediawiki site."""
@@ -68,7 +64,7 @@ class CargoError(Exception):
     pass
 
 
-def cargo_export(cargo: Cargo, params: CargoParameters) -> Any:
+def cargo_export(cargo: Cargo, params: CargoParameters) -> list:
     # TODO: Leaky Typing
     """Call the export point. Caches the URL."""
     req_params = params.copy()
@@ -101,7 +97,12 @@ def cargo_export(cargo: Cargo, params: CargoParameters) -> Any:
         raise CargoError from e
 
     res = request.json()
+
     if "error" in res:
         raise CargoError(res["error"])
 
-    return res
+    match res:
+        case list():
+            return res
+        case _:
+            raise TypeError("Endpoint expected to return list.")

@@ -4,7 +4,7 @@ from functools import partial
 from .base import CargoFetcher
 
 WIKI_DOMAIN = "https://dustloop.com"
-WIKI_BASE_PATH = "/wiki"
+WIKI_BASE_PATH = "/wiki/index.php"
 WIKI_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 WIKI_TABLES_PATH = "/Special:CargoTables"
 

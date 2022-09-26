@@ -17,12 +17,13 @@ def name_to_type(name: str) -> type:
     match name.lower().split():
         case ["integer"]:
             return int
-        case ["list", "of", "integer"]:
-            return list[int]
+        case ["file"]:
+            # Could add a special type later
+            return str
         case ["string" | "wikitext", *_]:
             return str
-        case ["list", "of", *_]:
-            return list[str]
+        case ["list", "of", t, *_]:
+            return cast(type, list[name_to_type(t)])  # type: ignore
         case default:
             raise CargoError(f'Unknown type: "{default}"')
 
@@ -47,8 +48,12 @@ def parse_cargo_table(cargo: Cargo, table_name: str) -> Move:
 
     fields = [[t.strip() for t in tag.text.split("-")] for tag in table.find_all("li")]
 
-    result = make_dataclass(
-        table_name,
-        [(f[0], name_to_type(f[1])) for f in fields],
-    )
+    try:
+        result = make_dataclass(
+            table_name,
+            [(f[0], name_to_type(f[1])) for f in fields],
+        )
+    except CargoError as e:
+        raise CargoError(f"Failed to construct types for {table_url}") from e
+
     return cast(Move, result)

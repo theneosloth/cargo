@@ -3,9 +3,25 @@ from inspect import signature
 from . import cargo, scrape
 
 
+def test_name_to_type() -> None:
+    test_cases = [
+        ("String", str),
+        ("Wikitext", str),
+        ("File", str),
+        ("Integer", int),
+        ("List of File", list[str]),
+        ("List of String", list[str]),
+        ("List of Wikitext", list[str]),
+        ("List of Integer", list[int]),
+    ]
+
+    for wiki_string, expected_type in test_cases:
+        assert scrape.name_to_type(wiki_string) == expected_type
+
+
 def test_scrape_ggst() -> None:
     WIKI_DOMAIN = "https://dustloop.com"
-    WIKI_BASE_PATH = "/wiki"
+    WIKI_BASE_PATH = "/wiki/index.php"
     WIKI_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
     WIKI_TABLES_PATH = "/Special:CargoTables"
     WIKI_TABLE = "MoveData_GGST"
