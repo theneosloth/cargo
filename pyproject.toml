@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "cargo_export"
+name = "cargo"
 version = "0.0.1"
 description = "Export utilities for mediawiki cargo tables"
 authors = ["Stefan Kuznetsov <neosloth@posteo.net>"]
@@ -30,3 +30,9 @@ build-backend = "poetry.core.masonry.api"
 [tool.mypy]
 disallow_untyped_defs = true
 warn_return_any = true
+
+packages = [
+    { include = "cargo" },
+    { include = "sites" },
+    
+]

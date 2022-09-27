@@ -9,7 +9,7 @@ from cargo.__version__ import VERSION
 
 DEFAULT_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 DEFAULT_TABLES_PATH = "Special:CargoTables"
-DEFAULT_PARAMS_LIMIT = 50
+DEFAULT_PARAMS_LIMIT = 500
 
 sql_query = str
 cargo_query = str | List[str]

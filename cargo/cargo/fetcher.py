@@ -1,11 +1,25 @@
 """Generic wrapper for a MediaWiki cargo page."""
-
+from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import fields
-from typing import Iterator, List, Optional
+from typing import Iterator, Optional
 
-from cargo.cargo import Cargo, CargoParameters, cargo_export
-from cargo.scrape import Move, parse_cargo_table
+from .cargo import Cargo, CargoParameters, cargo_export
+from .scrape import Move, parse_cargo_table
+
+
+class BaseFetcher(Mapping):
+    """Interface for move fetchers."""
+
+    @abstractmethod
+    def get_moves_by_input(self, char: str, input: str) -> list[Move]:
+        """Return the movelist for a character CHARA."""
+        pass
+
+    @abstractmethod
+    def get_moves(self, char: str) -> list[Move]:
+        """Return the movelist for a character CHARA."""
+        pass
 
 
 class CargoFetcher(Mapping):
@@ -27,6 +41,7 @@ class CargoFetcher(Mapping):
         self.table_name = table_name
 
         self._move: Optional[Move] = None
+        self.default_key = "chara"
 
     @property
     def move(self) -> type:
@@ -35,7 +50,7 @@ class CargoFetcher(Mapping):
             self._move = parse_cargo_table(self.cargo, self.table_name)
         return self._move
 
-    def _list_to_moves(self, moves: list) -> List[Move]:
+    def _list_to_moves(self, moves: list) -> list[Move]:
         """Copy all keys from res to Character."""
         res = []
         blank_fields = {t.name: None for t in fields(self.move)}
@@ -47,7 +62,7 @@ class CargoFetcher(Mapping):
 
         return res
 
-    def _get(self, params: CargoParameters) -> List[Move]:
+    def _get(self, params: CargoParameters) -> list[Move]:
         """Wrap around cargo_export."""
         field_param = ",".join([f.name for f in fields(self.move)])
 
@@ -59,10 +74,17 @@ class CargoFetcher(Mapping):
         result = cargo_export(self.cargo, merged_params | params)
         return self._list_to_moves(result)
 
-    def get_moves(self, char: str, input: str) -> List[Move]:
+    def get_moves(self, char: str) -> list[Move]:
+        """Return the movelist for a character CHARA."""
+        params: CargoParameters = {
+            "where": f"chara='{char}'",
+        }
+        return self._get(params)
+
+    def get_moves_by_input(self, char: str, input: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
         exact_params: CargoParameters = {
-            "where": f'chara="{char}" AND input="{input}"',
+            "where": f'{self.default_key}="{char}" AND input="{input}"',
         }
         result = self._get(exact_params)
         if result:
@@ -73,17 +95,19 @@ class CargoFetcher(Mapping):
         }
         return self._get(fuzzy_params)
 
-    def __getitem__(self, char: str) -> List[Move]:
+    def __getitem__(self, char: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
-        params: CargoParameters = {
-            "where": f"chara='{char}'",
-        }
-        result = self._get(params)
-        return result
+        return self.get_moves(char)
 
-    def __iter__(self) -> Iterator[Move]:
+    def __iter__(self, default_field: str = "chara") -> Iterator[Move]:
         """Iterate over all characters."""
-        raise NotImplementedError
+        iter_params: CargoParameters = {
+            "group_by": default_field,
+            "tables": self.table_name,
+            "fields": default_field,
+        }
+        data = cargo_export(self.cargo, iter_params)
+        return (c[default_field] for c in data)
 
     def __len__(self) -> int:
         """Get the character count."""
