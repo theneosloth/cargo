@@ -1,7 +1,7 @@
 """A wrapper around dreamcancel.com cargo export endpoints."""
 from functools import partial
 
-from cargo.fetcher import CargoFetcher
+from ..cargo.fetcher import CargoFetcher
 
 WIKI_DOMAIN = "https://dustloop.com"
 WIKI_BASE_PATH = "/wiki/index.php"

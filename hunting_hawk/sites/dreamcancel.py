@@ -2,7 +2,7 @@
 
 from functools import partial
 
-from cargo.fetcher import CargoFetcher
+from ..cargo.fetcher import CargoFetcher
 
 WIKI_DOMAIN = "https://dreamcancel.com"
 WIKI_BASE_PATH = "/wiki"

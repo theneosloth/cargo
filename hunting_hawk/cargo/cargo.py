@@ -5,7 +5,7 @@ from typing import Any, List, TypedDict, cast
 import requests
 import requests_cache
 
-from cargo.__version__ import VERSION
+from .__version__ import VERSION
 
 DEFAULT_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 DEFAULT_TABLES_PATH = "Special:CargoTables"
