@@ -1,6 +1,6 @@
 """Cargo wrapper."""
 from dataclasses import dataclass, field
-from typing import Any, List, TypedDict, cast
+from typing import List, TypedDict
 
 import requests
 import requests_cache
@@ -39,11 +39,9 @@ class Cargo:
     base_path: str
     table_export_path: str
     tables_path: str
-    headers: dict[str, str] = field(init=False)
-
-    def __post_init__(self) -> None:
-        """Initialize the version header."""
-        object.__setattr__(self, "headers", {"User-Agent": f"cargo_export/{VERSION}"})
+    headers: dict[str, str] = field(
+        default_factory=lambda: {"User-Agent": f"cargo-export/{VERSION}"}
+    )
 
     def index_endpoint(self) -> str:
         """Construct a mediawiki API endpoint for a given mediawiki site."""
@@ -67,16 +65,9 @@ class CargoError(Exception):
 def cargo_export(cargo: Cargo, params: CargoParameters) -> list:
     # TODO: Leaky Typing
     """Call the export point. Caches the URL."""
-    req_params = params.copy()
-
-    if "limit" not in req_params:
-        req_params["limit"] = DEFAULT_PARAMS_LIMIT
-
+    req_params = {"limit": DEFAULT_PARAMS_LIMIT} | params
     export = cargo.export_endpoint()
-
-    req = requests.Request(
-        "GET", export, headers=cargo.headers, params=cast(dict, req_params)
-    )
+    req = requests.Request("GET", export, headers=cargo.headers, params=req_params)
     prepped = req.prepare()
 
     s = requests_cache.CachedSession()
@@ -87,7 +78,6 @@ def cargo_export(cargo: Cargo, params: CargoParameters) -> list:
 
     try:
         request = s.send(prepped)
-
         request.raise_for_status()
 
     except requests.exceptions.JSONDecodeError as e:

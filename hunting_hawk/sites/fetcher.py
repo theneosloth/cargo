@@ -4,11 +4,11 @@ from collections.abc import Mapping
 from dataclasses import fields
 from typing import Iterator, Optional
 
-from .cargo import Cargo, CargoParameters, cargo_export
-from .scrape import Move, parse_cargo_table
+from hunting_hawk.cargo.cargo import Cargo, CargoParameters, cargo_export
+from hunting_hawk.cargo.scrape import Move, parse_cargo_table
 
 
-class BaseFetcher(Mapping):
+class MoveDataFetcher(Mapping):
     """Interface for move fetchers."""
 
     @abstractmethod
@@ -22,7 +22,7 @@ class BaseFetcher(Mapping):
         pass
 
 
-class CargoFetcher(Mapping):
+class CargoFetcher(MoveDataFetcher):
     """Fetcher more specific to Fighting game wikis."""
 
     cargo: Cargo
