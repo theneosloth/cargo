@@ -1,7 +1,8 @@
 """Scrape wikipedia for type definitons of a cargo table."""
-from dataclasses import make_dataclass
-from typing import NewType, cast
+from dataclasses import field, make_dataclass
+from typing import NewType, Optional, cast
 
+import pydantic
 from bs4 import BeautifulSoup
 from requests import get
 
@@ -51,9 +52,9 @@ def parse_cargo_table(cargo: Cargo, table_name: str) -> Move:
     try:
         result = make_dataclass(
             table_name,
-            [(f[0], name_to_type(f[1])) for f in fields],
+            [(f[0], Optional[name_to_type(f[1])], field(default=None)) for f in fields],
         )
     except CargoError as e:
         raise CargoError(f"Failed to construct types for {table_url}") from e
 
-    return cast(Move, result)
+    return pydantic.dataclasses.dataclass(result)

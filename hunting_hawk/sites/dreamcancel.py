@@ -14,5 +14,7 @@ init_fetcher = partial(
     CargoFetcher, WIKI_DOMAIN, WIKI_BASE_PATH, WIKI_TABLE_EXPORT_PATH, WIKI_TABLES_PATH
 )
 
+__all__ = ["KOFXV", "KOF02UM"]
+
 KOFXV = init_fetcher("MoveData_KOFXV")
 KOF02UM = init_fetcher("MoveData_KOF02UM")

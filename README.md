@@ -1,7 +1,7 @@
 # CargoExport
 Export utilities for mediawiki cargo tables
 
-Cargo table definitions are dynamically parsed into dataclasses.
+Cargo table definitions are dynamically parsed into Pydantic dataclasses.
 
 cargo/fetcher.py provides the basic interface for all fighting game wiki related methods.
 
@@ -20,3 +20,11 @@ assert BBCF.get_moves_by_input("Jin Kisaragi", "214B") is not None
 assert GGACR.get_moves_by_input("Ky Kiske", "236S")[0].name == "S Stun Edge"
 
 ```
+
+# Modules
+
+This is currently a hodgepodge of vaguely related libraries and applications that could (and should) in the future be separated out
+
+- cargo: lower level wrapper around the Mediawiki cargoquery endpoint
+- sites: higher level wrapper around
+- web: rest api wrapper around sites

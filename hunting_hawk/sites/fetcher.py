@@ -2,13 +2,13 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import fields
-from typing import Iterator, Optional
+from typing import Iterator, Optional, Any
 
 from hunting_hawk.cargo.cargo import Cargo, CargoParameters, cargo_export
 from hunting_hawk.cargo.scrape import Move, parse_cargo_table
 
 
-class MoveDataFetcher(Mapping):
+class MoveDataFetcher(Mapping[Any, Any]):
     """Interface for move fetchers."""
 
     @abstractmethod
@@ -50,7 +50,7 @@ class CargoFetcher(MoveDataFetcher):
             self._move = parse_cargo_table(self.cargo, self.table_name)
         return self._move
 
-    def _list_to_moves(self, moves: list) -> list[Move]:
+    def _list_to_moves(self, moves: list[Any]) -> list[Move]:
         """Copy all keys from res to Character."""
         res = []
         blank_fields = {t.name: None for t in fields(self.move)}

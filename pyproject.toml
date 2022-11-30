@@ -9,6 +9,8 @@ python = "^3.10"
 requests = "^2.27.1"
 beautifulsoup4 = "^4.11.1"
 requests-cache = "^0.9.4"
+pydantic = "^1.10.2"
+fastapi = "^0.88.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.940"
@@ -21,7 +23,8 @@ pyls-isort = "^0.2.2"
 isort = "^5.10.1"
 pylsp-mypy = "^0.5.8"
 types-beautifulsoup4 = "^4.11.1"
-Sphinx = "^5.1.1"
+exceptiongroup = "^1.0.4"
+uvicorn = "^0.20.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -30,3 +33,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.mypy]
 disallow_untyped_defs = true
 warn_return_any = true
+plugins = [
+  "pydantic.mypy"
+]

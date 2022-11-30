@@ -1,6 +1,6 @@
 """Cargo wrapper."""
 from dataclasses import dataclass, field
-from typing import List, TypedDict
+from typing import Any, List, TypedDict
 
 import requests
 import requests_cache
@@ -62,7 +62,7 @@ class CargoError(Exception):
     pass
 
 
-def cargo_export(cargo: Cargo, params: CargoParameters) -> list:
+def cargo_export(cargo: Cargo, params: CargoParameters) -> list[Any]:
     # TODO: Leaky Typing
     """Call the export point. Caches the URL."""
     req_params = {"limit": DEFAULT_PARAMS_LIMIT} | params
