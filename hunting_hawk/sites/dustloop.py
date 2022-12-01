@@ -1,5 +1,6 @@
 """A wrapper around dreamcancel.com cargo export endpoints."""
-from functools import partial
+
+from hunting_hawk.cargo.cargo import Cargo
 
 from .fetcher import CargoFetcher
 
@@ -8,17 +9,16 @@ WIKI_BASE_PATH = "/wiki/index.php"
 WIKI_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 WIKI_TABLES_PATH = "/Special:CargoTables"
 
-init_fetcher = partial(
-    CargoFetcher, WIKI_DOMAIN, WIKI_BASE_PATH, WIKI_TABLE_EXPORT_PATH, WIKI_TABLES_PATH
-)
+cargo = Cargo(WIKI_DOMAIN, WIKI_BASE_PATH, WIKI_TABLE_EXPORT_PATH, WIKI_TABLES_PATH)
+
 __all__ = ["GGST", "BBCF", "GGACR", "P4U2R", "HNK"]
 
-GGST = init_fetcher("MoveData_GGST")
+GGST = CargoFetcher(cargo, "MoveData_GGST")
 
-BBCF = init_fetcher("MoveData_BBCF")
+BBCF = CargoFetcher(cargo, "MoveData_BBCF")
 
-GGACR = init_fetcher("MoveData_GGACR")
+GGACR = CargoFetcher(cargo, "MoveData_GGACR")
 
-P4U2R = init_fetcher("MoveData_P4U2R")
+P4U2R = CargoFetcher(cargo, "MoveData_P4U2R")
 
-HNK = init_fetcher("MoveData_HNK")
+HNK = CargoFetcher(cargo, "MoveData_HNK")

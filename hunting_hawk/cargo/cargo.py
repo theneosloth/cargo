@@ -10,6 +10,7 @@ from .__version__ import VERSION
 DEFAULT_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 DEFAULT_TABLES_PATH = "Special:CargoTables"
 DEFAULT_PARAMS_LIMIT = 500
+DEFAULT_TIMEOUT = 10
 
 sql_query = str
 cargo_query = str | List[str]
@@ -42,6 +43,7 @@ class Cargo:
     headers: dict[str, str] = field(
         default_factory=lambda: {"User-Agent": f"cargo-export/{VERSION}"}
     )
+    timeout: int = 10
 
     def index_endpoint(self) -> str:
         """Construct a mediawiki API endpoint for a given mediawiki site."""
@@ -62,6 +64,14 @@ class CargoError(Exception):
     pass
 
 
+class CargoNetworkError(CargoError):
+    """Exception class for cargo exceptions related to network failures."""
+
+
+class CargoParseError(CargoError):
+    """Exception class for cargo exceptions related to parsing Cargo tables."""
+
+
 def cargo_export(cargo: Cargo, params: CargoParameters) -> list[Any]:
     # TODO: Leaky Typing
     """Call the export point. Caches the URL."""
@@ -77,14 +87,14 @@ def cargo_export(cargo: Cargo, params: CargoParameters) -> list[Any]:
         raise CargoError("Failed to construct url.")
 
     try:
-        request = s.send(prepped)
+        request = s.send(prepped, timeout=cargo.timeout)
         request.raise_for_status()
 
     except requests.exceptions.JSONDecodeError as e:
-        raise CargoError from e
+        raise CargoNetworkError from e
 
     except requests.exceptions.HTTPError as e:
-        raise CargoError from e
+        raise CargoNetworkError from e
 
     res = request.json()
 

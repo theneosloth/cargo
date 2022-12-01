@@ -29,17 +29,13 @@ class CargoFetcher(MoveDataFetcher):
     table_name: str
 
     def __init__(
-        self,
-        domain: str,
-        base_path: str,
-        table_export_path: str,
-        tables_path: str,
-        table_name: str,
+            self,
+            cargo: Cargo,
+            table_name: str
     ) -> None:
         """Init a cargo object and fetch move definition."""
-        self.cargo = Cargo(domain, base_path, table_export_path, tables_path)
+        self.cargo = cargo
         self.table_name = table_name
-
         self._move: Optional[Move] = None
         self.default_key = "chara"
 
