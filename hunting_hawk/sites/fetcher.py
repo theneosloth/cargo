@@ -2,10 +2,14 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import fields
-from typing import Iterator, Optional, Any
+from typing import Any, Iterator, Optional
+
+from pydantic.dataclasses import DataclassProxy
 
 from hunting_hawk.cargo.cargo import Cargo, CargoParameters, cargo_export
 from hunting_hawk.cargo.scrape import Move, parse_cargo_table
+
+__all__ = ["CargoFetcher", "MoveDataFetcher"]
 
 
 class MoveDataFetcher(Mapping[Any, Any]):
@@ -28,19 +32,15 @@ class CargoFetcher(MoveDataFetcher):
     cargo: Cargo
     table_name: str
 
-    def __init__(
-            self,
-            cargo: Cargo,
-            table_name: str
-    ) -> None:
+    def __init__(self, cargo: Cargo, table_name: str) -> None:
         """Init a cargo object and fetch move definition."""
         self.cargo = cargo
         self.table_name = table_name
-        self._move: Optional[Move] = None
+        self._move: Optional[DataclassProxy] = None
         self.default_key = "chara"
 
     @property
-    def move(self) -> type:
+    def move(self) -> DataclassProxy:
         """Lazy load the cargo table definition."""
         if self._move is None:
             self._move = parse_cargo_table(self.cargo, self.table_name)
