@@ -2,7 +2,8 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import fields
-from typing import Any, Iterator, Optional
+from functools import cached_property
+from typing import Any, Iterator
 
 from pydantic.dataclasses import DataclassProxy
 
@@ -36,15 +37,12 @@ class CargoFetcher(MoveDataFetcher):
         """Init a cargo object and fetch move definition."""
         self.cargo = cargo
         self.table_name = table_name
-        self._move: Optional[DataclassProxy] = None
         self.default_key = "chara"
 
-    @property
+    @cached_property
     def move(self) -> DataclassProxy:
         """Lazy load the cargo table definition."""
-        if self._move is None:
-            self._move = parse_cargo_table(self.cargo, self.table_name)
-        return self._move
+        return parse_cargo_table(self.cargo, self.table_name)
 
     def _list_to_moves(self, moves: list[Any]) -> list[Move]:
         """Copy all keys from res to Character."""

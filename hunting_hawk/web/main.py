@@ -6,6 +6,7 @@ from fastapi import FastAPI
 
 from hunting_hawk.cargo.scrape import Move
 from hunting_hawk.sites.dustloop import BBCF, GGACR, HNK, P4U2R
+from hunting_hawk.sites.dreamcancel import KOFXV
 from hunting_hawk.sites.mizuumi import MBTL
 from hunting_hawk.sites.supercombo import SCVI, SF6
 
@@ -86,3 +87,14 @@ def get_move_sf6(character: str, move: Optional[str] = None) -> list[Move]:
     if move is not None:
         return SF6.get_moves_by_input(character, move)
     return SF6.get_moves(character)
+
+@app.get("/KOFXV/characters/", response_model=List[str])
+def get_characters_kofxv() -> List[str]:
+    return list(KOFXV)
+
+
+@app.get("/KOFXV/characters/{character}/", response_model=List[KOFXV.move])  # type: ignore
+def get_move_kofxv(character: str, move: Optional[str] = None) -> list[Move]:
+    if move is not None:
+        return KOFXV.get_moves_by_input(character, move)
+    return KOFXV.get_moves(character)

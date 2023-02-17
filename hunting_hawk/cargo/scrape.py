@@ -1,12 +1,12 @@
 """Scrape wikipedia for type definitons of a cargo table."""
 from dataclasses import field, make_dataclass
-from typing import NewType, Optional, Type, cast
+from typing import NewType, Optional, cast
 
 import requests
 from bs4 import BeautifulSoup
 from pydantic.dataclasses import DataclassProxy, dataclass
 
-from .cargo import DEFAULT_TIMEOUT, Cargo, CargoNetworkError, CargoParseError
+from .cargo import Cargo, CargoNetworkError, CargoParseError
 
 """Web scraping functions."""
 
@@ -15,7 +15,9 @@ Move = NewType("Move", type)
 
 def name_to_type(name: str) -> type:
     """Match a name to a type."""
-    match name.lower().split():
+    # TODO: Refactor into a more generic method
+    normalized_name = name.lower().strip(",").split()
+    match normalized_name:
         case ["integer"]:
             return int
         case ["file"]:
@@ -51,7 +53,10 @@ def parse_cargo_table(cargo: Cargo, table_name: str) -> DataclassProxy:
     table = soup.select_one("#mw-content-text > ul")
 
     if not table:
-        raise CargoNetworkError(f"Could not find table. at {table_url}")
+        # TODO: Refactor into a generic class
+        table = soup.select_one("#mw-content-text > ol")
+        if not table:
+            raise CargoNetworkError(f"Could not find table. at {table_url}")
 
     fields = [[t.strip() for t in tag.text.split("-")] for tag in table.find_all("li")]
 

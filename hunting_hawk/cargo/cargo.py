@@ -10,7 +10,6 @@ from .__version__ import VERSION
 DEFAULT_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 DEFAULT_TABLES_PATH = "Special:CargoTables"
 DEFAULT_PARAMS_LIMIT = 500
-DEFAULT_TIMEOUT = 10
 
 sql_query = str
 cargo_query = str | List[str]
@@ -30,7 +29,6 @@ class CargoParameters(TypedDict, total=False):
     having: cargo_query
     order_by: cargo_query
     offset: int
-
 
 @dataclass(eq=True, frozen=True)
 class Cargo:
