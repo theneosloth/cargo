@@ -1,47 +1,52 @@
 """Image info api endpoint wrapper"""
-from dataclasses import dataclass
-from typing import TypedDict, List, Dict, cast
+from typing import Dict, List, NewType
+
+from pydantic import BaseModel, ValidationError
+
 from .client import Client, cached_get
 
-ImageName = str
+ImageName = NewType("ImageName", str)
+ImageInfoNormalized = Dict[str, ImageName]
 
-ImageInfoNormalized = TypedDict('ImageInfoNormalized', {'from': ImageName, 'to': ImageName})
 
-class ImageInfoInfo(TypedDict):
+class ImageInfoInfo(BaseModel):
     timestamp: str
     user: str
 
-class ImageInfoPage(TypedDict):
+
+class ImageInfoPage(BaseModel):
     pageid: int
     ns: int
     title: str
     imagerepository: str
     imageinfo: List[ImageInfoInfo]
 
-class ImageInfoQuery(TypedDict, total=True):
+
+class ImageInfoQuery(BaseModel):
     normalized: List[ImageInfoNormalized]
     pages: Dict[str, ImageInfoPage]
 
-class ImageInfoResponse(TypedDict, total=True):
+
+class ImageInfoResponse(BaseModel):
     batchcomplete: str
     query: ImageInfoQuery
 
+
 # As documented here:
 # https://discoursedb.org/w/api.php?action=help&modules=cargoquery
-@dataclass(eq=True, frozen=True)
-class ImageInfoParams:
+class ImageInfoParams(BaseModel):
     """A dict that only permits imageinfo parameters."""
 
-    titles: str
+    titles: ImageName
     action: str = "query"
     format: str = "json"
     prop: str = "imageinfo"
 
-def get_image_info(client: Client, image_name: str) -> ImageInfoResponse:
-    params = ImageInfoParams(titles = image_name).__dict__
+
+def get_image_info(client: Client, image_name: ImageName) -> ImageInfoResponse:
+    params = ImageInfoParams(titles=image_name).__dict__
     res = cached_get(client, client.index_endpoint(), params)
-    match res:
-        case dict():
-            return cast(ImageInfoResponse, res)
-        case _:
-            raise TypeError("Failed to parse")
+    try:
+        return ImageInfoResponse.parse_obj(res)
+    except ValidationError as e:
+        raise TypeError("Failed to unmarshal the model") from e
