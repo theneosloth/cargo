@@ -1,6 +1,6 @@
 from . import cargo
 
-test_cargo = cargo.Cargo(
+test_cargo = cargo.CargoClient(
     "https://example.com",
     "/wiki/superfluous",
     "?title=Special:CargoExport",

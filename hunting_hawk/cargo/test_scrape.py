@@ -1,6 +1,8 @@
 from inspect import signature
 
-from . import cargo, scrape
+from hunting_hawk.mediawiki.cargo import CargoClient
+
+from . import scrape
 
 
 def test_name_to_type() -> None:
@@ -26,8 +28,8 @@ def test_scrape_ggst() -> None:
     WIKI_TABLES_PATH = "/Special:CargoTables"
     WIKI_TABLE = "MoveData_GGST"
 
-    dustloop = cargo.Cargo(
-        WIKI_DOMAIN, WIKI_BASE_PATH, WIKI_TABLE_EXPORT_PATH, WIKI_TABLES_PATH
+    dustloop = CargoClient(
+        WIKI_DOMAIN, WIKI_BASE_PATH, table_export_path=WIKI_TABLE_EXPORT_PATH, tables_path=WIKI_TABLES_PATH
     )
 
     ggst_attributes = {"chara": str, "name": str, "prorate": str, "images": list[str]}
@@ -49,8 +51,8 @@ def test_scrape_kofxv() -> None:
     WIKI_TABLES_PATH = "/Special:CargoTables"
     WIKI_TABLE = "MoveData_KOFXV"
 
-    dustloop = cargo.Cargo(
-        WIKI_DOMAIN, WIKI_BASE_PATH, WIKI_TABLE_EXPORT_PATH, WIKI_TABLES_PATH
+    dustloop = CargoClient(
+        WIKI_DOMAIN, WIKI_BASE_PATH, table_export_path=WIKI_TABLE_EXPORT_PATH, tables_path=WIKI_TABLES_PATH
     )
 
     kofxv_attributes = {

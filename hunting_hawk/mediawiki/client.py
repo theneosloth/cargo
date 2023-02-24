@@ -13,10 +13,9 @@ class Client:
     domain: str
     base_path: str
     headers: dict[str, str] = field(
-        default_factory=lambda: {"User-Agent": f"cargo-export/{VERSION}"}
+        default_factory=lambda: {"User-Agent": f"cargo-export/{VERSION}"}, kw_only=True
     )
-    timeout: int = 10
-    limit: int = 500
+    timeout: int = field(default=10, kw_only=True)
 
     def index_endpoint(self) -> str:
         """Construct a mediawiki API endpoint for a given mediawiki site."""
@@ -33,12 +32,16 @@ class ClientNetworkError(ClientError):
     """Exception class for cargo exceptions related to network failures."""
 
 
+class ClientDecodeError(ClientError):
+    """Exception class for cargo exceptions related to network failures."""
+
+
 class ClientApiError(ClientError):
     """Exception class for cargo exceptions related to network failures."""
 
 
 def cached_get(
-    client: Client, path: str, params: dict[str, str]
+    client: Client, path: str, params: dict[str, Any]
 ) -> list[str] | dict[Any, Any]:
     """Call a given URL. Caches the response"""
     req_params = params
@@ -54,19 +57,14 @@ def cached_get(
         request = s.send(prepped, timeout=client.timeout)
         request.raise_for_status()
         res = request.json()
-
-    except requests.exceptions.JSONDecodeError as e:
-        raise ClientNetworkError from e
-
     except requests.exceptions.HTTPError as e:
         raise ClientNetworkError from e
     except requests.exceptions.JSONDecodeError as e:
-        raise ClientNetworkError from e
-
-    if "error" in res:
-        raise ClientApiError(res["error"])
+        raise ClientDecodeError from e
 
     match res:
+        case {"error": err}:
+            raise ClientApiError(err)
         case list() | dict():
             return res
         case _:

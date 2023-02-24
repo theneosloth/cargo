@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 from pydantic.dataclasses import DataclassProxy, dataclass
 
-from .cargo import Cargo, CargoNetworkError, CargoParseError
+from hunting_hawk.mediawiki.cargo import CargoClient, CargoNetworkError, CargoParseError
 
 """Web scraping functions."""
 
@@ -32,7 +32,7 @@ def name_to_type(name: str) -> type:
             raise CargoParseError(f'Unknown type: "{default}"')
 
 
-def parse_cargo_table(cargo: Cargo, table_name: str) -> DataclassProxy:
+def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
     """Dynamically construct a type for a cargo table with TABLE_NAME."""
     tables_endpoint = cargo.tables_endpoint()
 

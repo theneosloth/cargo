@@ -7,8 +7,8 @@ from typing import Any, Iterator
 
 from pydantic.dataclasses import DataclassProxy
 
-from hunting_hawk.cargo.cargo import Cargo, CargoParameters, cargo_export
 from hunting_hawk.cargo.scrape import Move, parse_cargo_table
+from hunting_hawk.mediawiki.cargo import CargoClient, CargoParameters, cargo_export
 
 __all__ = ["CargoFetcher", "MoveDataFetcher"]
 
@@ -30,10 +30,10 @@ class MoveDataFetcher(Mapping[Any, Any]):
 class CargoFetcher(MoveDataFetcher):
     """Fetcher more specific to Fighting game wikis."""
 
-    cargo: Cargo
+    cargo: CargoClient
     table_name: str
 
-    def __init__(self, cargo: Cargo, table_name: str) -> None:
+    def __init__(self, cargo: CargoClient, table_name: str) -> None:
         """Init a cargo object and fetch move definition."""
         self.cargo = cargo
         self.table_name = table_name
