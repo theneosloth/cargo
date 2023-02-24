@@ -7,8 +7,8 @@ from typing import Any, Iterator
 
 from pydantic.dataclasses import DataclassProxy
 
-from hunting_hawk.cargo.scrape import Move, parse_cargo_table
 from hunting_hawk.mediawiki.cargo import CargoClient, CargoParameters, cargo_export
+from hunting_hawk.scrape.scrape import Move, parse_cargo_table
 
 __all__ = ["CargoFetcher", "MoveDataFetcher"]
 
