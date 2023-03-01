@@ -33,11 +33,11 @@ class ClientNetworkError(ClientError):
 
 
 class ClientDecodeError(ClientError):
-    """Exception class for cargo exceptions related to network failures."""
+    """Exception class for cargo exceptions related to decoding failures."""
 
 
 class ClientApiError(ClientError):
-    """Exception class for cargo exceptions related to network failures."""
+    """Exception class for cargo exceptions related to API failures."""
 
 
 def cached_get(
@@ -69,3 +69,26 @@ def cached_get(
             return res
         case _:
             raise TypeError("Unknown return type")
+
+
+def raw_cached_get(
+    client: Client, path: str, params: dict[str, Any]
+) -> requests.Response:
+    """Call a given URL. Caches the response"""
+    req_params = params
+    req = requests.Request("GET", path, headers=client.headers, params=req_params)
+    prepped = req.prepare()
+
+    s = requests_cache.CachedSession(use_temp=True)
+    url = prepped.url
+
+    if url is None:
+        raise ClientError("Failed to construct url.")
+    try:
+        request = s.send(prepped, timeout=client.timeout)
+        request.raise_for_status()
+        return request
+    except requests.exceptions.HTTPError as e:
+        raise ClientNetworkError from e
+    except requests.exceptions.JSONDecodeError as e:
+        raise ClientDecodeError from e

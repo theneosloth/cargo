@@ -1,17 +1,20 @@
 """Image info api endpoint wrapper"""
-from typing import Dict, List, NewType
+from typing import Dict, List, NewType, Optional
 
 from pydantic import BaseModel, ValidationError
 
 from .client import Client, cached_get
 
-ImageName = NewType("ImageName", str)
+ImageName = str
 ImageInfoNormalized = Dict[str, ImageName]
 
 
 class ImageInfoInfo(BaseModel):
     timestamp: str
     user: str
+    url: Optional[str]
+    descriptionurl: Optional[str]
+    descriptionshorturl: Optional[str]
 
 
 class ImageInfoPage(BaseModel):

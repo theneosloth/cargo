@@ -1,5 +1,5 @@
 """Cargo wrapper."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, List, TypedDict
 
 from .client import Client, ClientError, cached_get

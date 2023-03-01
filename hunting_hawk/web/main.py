@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from fastapi import FastAPI
 
-from hunting_hawk.cargo.scrape import Move
+from hunting_hawk.scrape.scrape import Move
 from hunting_hawk.sites.dreamcancel import KOFXV
 from hunting_hawk.sites.dustloop import BBCF, GGACR, HNK, P4U2R
 from hunting_hawk.sites.mizuumi import MBTL

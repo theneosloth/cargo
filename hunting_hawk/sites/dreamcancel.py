@@ -16,7 +16,8 @@ cargo = CargoClient(
     WIKI_TABLES_PATH,
 )
 
-__all__ = ["KOFXV", "KOF02UM"]
+__all__ = ["KOFXV", "KOF02UM", "SSVI"]
 
 KOFXV = CargoFetcher(cargo, "MoveData_KOFXV")
 KOF02UM = CargoFetcher(cargo, "MoveData_KOF02UM")
+SSVI = CargoFetcher(cargo, "MoveData_SSVI")
