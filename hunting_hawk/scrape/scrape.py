@@ -1,6 +1,6 @@
 """Scrape wikipedia for type definitons of a cargo table."""
 from dataclasses import field, make_dataclass
-from typing import NewType, Optional, cast
+from typing import Any, Generator, NewType, Optional, cast
 
 import requests
 from bs4 import BeautifulSoup
@@ -11,7 +11,18 @@ from hunting_hawk.mediawiki.cargo import CargoClient, CargoNetworkError, CargoPa
 """Web scraping functions."""
 
 Move = NewType("Move", type)
-File = NewType("File", str)
+
+
+class File(str):
+    @classmethod
+    def __get_validators__(cls) -> Generator[Any, None, None]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v) -> None:  # type: ignore
+        if not isinstance(v, str):
+            raise TypeError("Not a string value")
+        return v  # type: ignore
 
 
 def name_to_type(name: str) -> type:
@@ -71,8 +82,6 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
         # Mypy does not handle dynamic type names
         fields,  # type: ignore
         frozen=True,
-        # TODO: Make this not hideous
-        # We need to do some post processing on fields, can be separated into a cleaner function
     )
 
     proxy = dataclass(result)

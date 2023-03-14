@@ -13,7 +13,10 @@ class Client:
     domain: str
     base_path: str
     headers: dict[str, str] = field(
-        default_factory=lambda: {"User-Agent": f"cargo-export/{VERSION}"}, kw_only=True
+        default_factory=lambda: {
+            "User-Agent": f"cargo-export/{VERSION}. https://github.com/theneosloth/cargo"
+        },
+        kw_only=True,
     )
     timeout: int = field(default=10, kw_only=True)
 

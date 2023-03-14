@@ -3,13 +3,13 @@ from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import fields
 from functools import cached_property
-from typing import Any, Iterator
+from typing import Any, Iterator, Optional
 
 from pydantic.dataclasses import DataclassProxy
 
 from hunting_hawk.mediawiki.cargo import CargoClient, CargoParameters, cargo_export
 from hunting_hawk.mediawiki.filepath import get_file_path
-from hunting_hawk.scrape.scrape import Move, parse_cargo_table
+from hunting_hawk.scrape.scrape import File, Move, parse_cargo_table
 
 __all__ = ["CargoFetcher", "MoveDataFetcher"]
 
@@ -51,28 +51,35 @@ class CargoFetcher(MoveDataFetcher):
         return parse_cargo_table(self.client, self.table_name)
 
     # TODO: Use type annotations
-    def convert_url(self, field: list[str] | str) -> list[str] | str:
-        match field:
+    def _convert_url(self, val: list[str] | str) -> list[str] | str:
+        match val:
             case list():
-                return [get_file_path(self.client, f) for f in field]
+                return [get_file_path(self.client, f) for f in val]
             case str():
-                return get_file_path(self.client, field)
+                return get_file_path(self.client, val)
 
     # TODO: Use type annotations here instead of a hardcoded list
-    def mutate_fields(self, fields: dict[Any, Any]) -> dict[Any, Any]:
-        file_fields = ["images", "hitboxes"]
+    def _mutate_fields(self, flds: dict[Any, Any]) -> dict[Any, Any]:
+        file_fields = [
+            f.name
+            for f in fields(self.move)
+            if f.type == Optional[File] or f.type == Optional[list[File]]
+        ]
+
         file_dicts = {
-            k: self.convert_url(v) for k, v in fields.items() if k in file_fields
+            k: self._convert_url(v) for k, v in flds.items() if k in file_fields
         }
 
-        return fields | file_dicts
+        return flds | file_dicts
 
     def _list_to_moves(self, moves: list[Any]) -> list[Move]:
         """Copy all keys from res to Character."""
         res = []
-        blank_fields = {t.name: None for t in fields(self.move)}
+        flds = fields(self.move)
+
+        blank_fields = {t.name: None for t in flds}
         for m in moves:
-            filled_move = blank_fields | self.mutate_fields(m)
+            filled_move = blank_fields | self._mutate_fields(m)
             move = self.move(**filled_move)
             res.append(move)
 
@@ -81,9 +88,8 @@ class CargoFetcher(MoveDataFetcher):
     def _get(self, params: CargoParameters) -> list[Move]:
         """Wrap around cargo_export."""
         # TODO: Prevent excessive API polling while we don't have a proper cache layer
-        field_param = ",".join(
-            [f.name for f in fields(self.move) if f.name not in ["images", "hitboxes"]]
-        )
+
+        field_param = ",".join([f.name for f in fields(self.move) if f.type != File])
 
         merged_params: CargoParameters = {
             "fields": field_param,
