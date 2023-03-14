@@ -1,16 +1,12 @@
 """Cargo wrapper."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, List, TypedDict
 
-import requests
-import requests_cache
-
-from .__version__ import VERSION
+from .client import Client, ClientError, cached_get
 
 DEFAULT_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 DEFAULT_TABLES_PATH = "Special:CargoTables"
 DEFAULT_PARAMS_LIMIT = 500
-DEFAULT_TIMEOUT = 10
 
 sql_query = str
 cargo_query = str | List[str]
@@ -33,21 +29,12 @@ class CargoParameters(TypedDict, total=False):
 
 
 @dataclass(eq=True, frozen=True)
-class Cargo:
+class CargoClient(Client):
     """Wrapper around the cargo query endpoint of a mediawiki site."""
 
-    domain: str
-    base_path: str
     table_export_path: str
     tables_path: str
-    headers: dict[str, str] = field(
-        default_factory=lambda: {"User-Agent": f"cargo-export/{VERSION}"}
-    )
-    timeout: int = 10
-
-    def index_endpoint(self) -> str:
-        """Construct a mediawiki API endpoint for a given mediawiki site."""
-        return f"{self.domain}{self.base_path}"
+    limit: int = 500
 
     def export_endpoint(self) -> str:
         """Construct a cargo export endpoint for a given mediawiki site."""
@@ -72,37 +59,18 @@ class CargoParseError(CargoError):
     """Exception class for cargo exceptions related to parsing Cargo tables."""
 
 
-def cargo_export(cargo: Cargo, params: CargoParameters) -> list[Any]:
+def cargo_export(cargo: CargoClient, params: CargoParameters) -> list[Any]:
     # TODO: Leaky Typing
     """Call the export point. Caches the URL."""
-    req_params = {"limit": DEFAULT_PARAMS_LIMIT} | params
-    export = cargo.export_endpoint()
-    req = requests.Request("GET", export, headers=cargo.headers, params=req_params)
-    prepped = req.prepare()
-
-    s = requests_cache.CachedSession()
-    url = prepped.url
-
-    if url is None:
-        raise CargoError("Failed to construct url.")
+    req_params = {"limit": cargo.limit} | params
 
     try:
-        request = s.send(prepped, timeout=cargo.timeout)
-        request.raise_for_status()
-
-    except requests.exceptions.JSONDecodeError as e:
+        res = cached_get(cargo, cargo.export_endpoint(), req_params)
+    except ClientError as e:
         raise CargoNetworkError from e
-
-    except requests.exceptions.HTTPError as e:
-        raise CargoNetworkError from e
-
-    res = request.json()
-
-    if "error" in res:
-        raise CargoError(res["error"])
 
     match res:
         case list():
             return res
         case _:
-            raise TypeError("Endpoint expected to return list.")
+            raise CargoParseError("Endpoint expected to return list.")

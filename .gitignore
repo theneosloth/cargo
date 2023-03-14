@@ -1,4 +1,6 @@
 http_cache.sqlite
+fly.toml
+pyrightconfig.json
 .idea/
 # Byte-compiled / optimized / DLL files
 __pycache__/
