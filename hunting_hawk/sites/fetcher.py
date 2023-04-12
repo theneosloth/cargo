@@ -10,6 +10,7 @@ from pydantic.dataclasses import DataclassProxy
 from hunting_hawk.mediawiki.cargo import CargoClient, CargoParameters, cargo_export
 from hunting_hawk.mediawiki.filepath import get_file_path
 from hunting_hawk.scrape.scrape import File, Move, parse_cargo_table
+from hunting_hawk.util.normalize import fuzzy_string, reverse_notation
 
 __all__ = ["CargoFetcher", "MoveDataFetcher"]
 
@@ -58,7 +59,6 @@ class CargoFetcher(MoveDataFetcher):
             case str():
                 return get_file_path(self.client, val)
 
-    # TODO: Use type annotations here instead of a hardcoded list
     def _mutate_fields(self, flds: dict[Any, Any]) -> dict[Any, Any]:
         file_fields = [
             f.name
@@ -89,8 +89,8 @@ class CargoFetcher(MoveDataFetcher):
         """Wrap around cargo_export."""
         # TODO: Prevent excessive API polling while we don't have a proper cache layer
 
-        field_param = ",".join([f.name for f in fields(self.move) if f.type != File])
-
+        file_types = (File, Optional[File], Optional[list[File]])
+        field_param = ",".join([f.name for f in fields(self.move) if f.type not in file_types])
         merged_params: CargoParameters = {
             "fields": field_param,
             "tables": self.table_name,
@@ -116,8 +116,9 @@ class CargoFetcher(MoveDataFetcher):
             return result
 
         fuzzy_params: CargoParameters = {
-            "where": f'chara="{char}" AND input LIKE "%{input}%"',
+            "where": f'({self.default_key}="{char}" AND input LIKE "{fuzzy_string(input)}") OR ({self.default_key}="{char}" AND input LIKE "{fuzzy_string(reverse_notation(input))}")'
         }
+
         return self._get(fuzzy_params)
 
     def query(self, char: str, query: CargoParameters) -> list[Move]:
