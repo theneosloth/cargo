@@ -29,9 +29,6 @@ exceptiongroup = "^1.0.4"
 [tool.poetry.scripts]
 api = "hunting_hawk.web.api:start"
 
-[tool.poetry.scripts]
-start = "hunting_hawk.web.main:start"
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
