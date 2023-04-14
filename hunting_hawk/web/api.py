@@ -1,7 +1,9 @@
 """REST web service for retreiving frame data"""
 
+import os
 from typing import List, Optional
 
+import uvicorn
 from fastapi import FastAPI
 
 from hunting_hawk.scrape.scrape import Move
@@ -107,3 +109,11 @@ def get_move_bbcf(character: str, move: Optional[str] = None) -> list[Move]:
     if move is not None:
         return BBCF.get_moves_by_input(character, move)
     return BBCF.get_moves(character)
+
+
+def start() -> None:
+    port = int(os.getenv("HUNTING_HAWK_PORT", "8080"))
+    uvicorn.run("hunting_hawk.web.main:app", host="0.0.0.0", port=port, reload=True)
+
+if __name__ == "__main__":
+    start()
