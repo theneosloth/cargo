@@ -36,7 +36,8 @@
                       };
 
                       docker-stream =  pkgs.dockerTools.streamLayeredImage {
-                          name = "hunting_hawk";
+                          name = "theneosloth/huntinghawk";
+                          created = builtins.substring 0 8 self.lastModifiedDate;
                           tag = "latest";
                           config = { Cmd = [ "${self.packages.${system}.default}/bin/api" ]; };
                       };
