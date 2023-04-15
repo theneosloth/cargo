@@ -35,4 +35,7 @@ jobs:
       run: docker push neosloth/huntinghawk:latest
 
     - name: Deploy
+      uses: superfly/flyctl-actions/setup-flyctl@master
       run: flyctl deploy -a huntinghawk -i neosloth/huntinghawk:latest
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
