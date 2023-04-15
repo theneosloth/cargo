@@ -1,4 +1,5 @@
 http_cache.sqlite
+result
 fly.toml
 pyrightconfig.json
 .idea/
@@ -6,6 +7,8 @@ pyrightconfig.json
 __pycache__/
 *.py[cod]
 *$py.class
+.direnv/
+.envrc
 
 # C extensions
 *.so

@@ -11,7 +11,7 @@ beautifulsoup4 = "^4.11.1"
 requests-cache = "^0.9.4"
 pydantic = "^1.10.2"
 fastapi = "^0.88.0"
-uvicorn = "^0.21.1"
+uvicorn = {extras = ["standard"], version = "^0.21.1"}
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.940"
@@ -34,8 +34,6 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-enabled = true
-live_mode = true
 strict = true
 disallow_untyped_defs = true
 warn_return_any = true
