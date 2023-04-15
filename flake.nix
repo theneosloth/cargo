@@ -1,56 +1,54 @@
 {
-    inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    description = "Application packaged using poetry2nix";
 
-    outputs = { self, nixpkgs }:
-        let
-            supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
-            forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-            pkgs = forAllSystems (system: nixpkgs.legacyPackages.${system});
-        in
-          {
-              packages = forAllSystems (system: {
-                  default = pkgs.${system}.poetry2nix.mkPoetryApplication {
-                      overrides = pkgs.${system}.poetry2nix.defaultPoetryOverrides.extend
-                          (self: super: {
-                              types-pyopenssl = super.types-pyopenssl.overridePythonAttrs(
-                                  old: {
-                                      buildInputs = (old.buildInputs or [ ]) ++ [ super.setuptools ];
-                                  }
-                              );
-                              url-normalize = super.url-normalize.overridePythonAttrs(
-                                  old: {
-                                      buildInputs = (old.buildInputs or [ ]) ++ [ super.poetry ];
-                                  }
-                              );
-                          });
-                      projectDir = ./.;
-                      preferWheels = true;
+    inputs.flake-utils.url = "github:numtide/flake-utils";
+    inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    inputs.poetry2nix = {
+        url = "github:nix-community/poetry2nix";
+        inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    outputs = { self, nixpkgs, flake-utils, poetry2nix }:
+        flake-utils.lib.eachDefaultSystem (system:
+            let
+                # see https://github.com/nix-community/poetry2nix/tree/master#api for more functions and examples.
+                inherit (poetry2nix.legacyPackages.${system}) mkPoetryApplication defaultPoetryOverrides mkPoetryEnv;
+                pkgs = nixpkgs.legacyPackages.${system};
+                overrides = defaultPoetryOverrides.extend
+                    (self: super: {
+                                  beautifulsoup4 = super.beautifulsoup4.overridePythonAttrs(
+                                      old: {
+                                          buildInputs = (old.buildInputs or [ ]) ++ [ super.hatchling ];
+                                      }
+                                  );
+                                  url-normalize = super.url-normalize.overridePythonAttrs(
+                                      old: {
+                                          buildInputs = (old.buildInputs or [ ]) ++ [ super.poetry ];
+                                      }
+                                  );
+                    });
+            in
+              {
+                  packages = {
+                      default =  mkPoetryApplication {
+                          projectDir = self;
+                          overrides = overrides;
+                      };
+
+                      docker-stream =  pkgs.dockerTools.streamLayeredImage {
+                          name = "hunting_hawk";
+                          tag = "latest";
+                          config = { Cmd = [ "${self.packages.${system}.default}/bin/api" ]; };
+                      };
                   };
-              });
 
-              devShells = forAllSystems (system: {
-                  default = pkgs.${system}.mkShellNoCC {
-                      packages = with pkgs.${system}; [
-                          (poetry2nix.mkPoetryEnv {
-                              projectDir = ./.;
-                              preferWheels = true;
-                              overrides = pkgs.${system}.poetry2nix.defaultPoetryOverrides.extend
-                                  (self: super: {
-                                      types-pyopenssl = super.types-pyopenssl.overridePythonAttrs(
-                                          old: {
-                                              buildInputs = (old.buildInputs or [ ]) ++ [ super.setuptools ];
-                                          }
-                                      );
-                                      url-normalize = super.url-normalize.overridePythonAttrs(
-                                          old: {
-                                              buildInputs = (old.buildInputs or [ ]) ++ [ super.poetry ];
-                                          }
-                                      );
-                                  });
+                  devShells.default = pkgs.mkShell {
+                      packages = [
+                          (mkPoetryEnv{
+                              projectDir = self;
+                              overrides = overrides;
                           })
-
                       ];
                   };
               });
-          };
 }

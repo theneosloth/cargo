@@ -113,7 +113,7 @@ def get_move_bbcf(character: str, move: Optional[str] = None) -> list[Move]:
 
 def start() -> None:
     port = int(os.getenv("HUNTING_HAWK_PORT", "8080"))
-    uvicorn.run("hunting_hawk.web.main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("hunting_hawk.web.api:app", host="0.0.0.0", port=port, reload=True)
 
 if __name__ == "__main__":
     start()

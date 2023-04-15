@@ -1,4 +1,5 @@
 http_cache.sqlite
+result
 fly.toml
 pyrightconfig.json
 .idea/
