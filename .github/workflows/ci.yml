@@ -16,6 +16,8 @@ jobs:
       with:
         name: ${{ secrets.CACHIX_REPO }}'
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - name: Run a linter
+      un: nix develop -c ruff .
     - name: Run a static type check
       run: nix develop -c mypy .
     - name: Run Unit tests

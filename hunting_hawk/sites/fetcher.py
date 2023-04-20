@@ -116,7 +116,13 @@ class CargoFetcher(MoveDataFetcher):
             return result
 
         fuzzy_params: CargoParameters = {
-            "where": f'({self.default_key}="{char}" AND input LIKE "{fuzzy_string(input)}") OR ({self.default_key}="{char}" AND input LIKE "{fuzzy_string(reverse_notation(input))}")'
+            "where":
+            (
+            f'({self.default_key}="{char}"'
+            f' AND input LIKE "{fuzzy_string(input)}")'
+            f' OR ({self.default_key}="{char}"'
+            f' AND input LIKE "{fuzzy_string(reverse_notation(input))}")'
+            )
         }
 
         return self._get(fuzzy_params)

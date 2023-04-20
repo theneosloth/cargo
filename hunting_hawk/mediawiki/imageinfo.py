@@ -1,5 +1,5 @@
 """Image info api endpoint wrapper"""
-from typing import Dict, List, NewType, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, ValidationError
 

@@ -16,16 +16,19 @@
                 pkgs = nixpkgs.legacyPackages.${system};
                 overrides = defaultPoetryOverrides.extend
                     (self: super: {
-                                  beautifulsoup4 = super.beautifulsoup4.overridePythonAttrs(
-                                      old: {
-                                          buildInputs = (old.buildInputs or [ ]) ++ [ super.hatchling ];
-                                      }
-                                  );
-                                  url-normalize = super.url-normalize.overridePythonAttrs(
-                                      old: {
-                                          buildInputs = (old.buildInputs or [ ]) ++ [ super.poetry ];
-                                      }
-                                  );
+                        ruff = super.ruff.override {
+                            preferWheel = true;
+                        };
+                        beautifulsoup4 = super.beautifulsoup4.overridePythonAttrs(
+                            old: {
+                                buildInputs = (old.buildInputs or [ ]) ++ [ super.hatchling ];
+                            }
+                        );
+                        url-normalize = super.url-normalize.overridePythonAttrs(
+                            old: {
+                                buildInputs = (old.buildInputs or [ ]) ++ [ super.poetry ];
+                            }
+                        );
                     });
             in
               {
@@ -35,7 +38,7 @@
                           overrides = overrides;
                       };
 
-                      docker-stream =  pkgs.dockerTools.streamLayeredImage {
+                      dockerStream =  pkgs.dockerTools.streamLayeredImage {
                           name = "neosloth/huntinghawk";
                           tag = "latest";
                           created = builtins.substring 0 8 self.lastModifiedDate;

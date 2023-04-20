@@ -1,5 +1,5 @@
 import requests
-from .client import Client, ClientError, raw_cached_get
+from .client import Client, ClientError
 
 ImageName = str
 
