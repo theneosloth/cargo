@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from dataclasses import fields
 from functools import cached_property
 from typing import Any, Iterator, Optional
-
+from html import unescape
 from pydantic.dataclasses import DataclassProxy
 
 from hunting_hawk.mediawiki.cargo import CargoClient, CargoParameters, cargo_export
@@ -70,7 +70,10 @@ class CargoFetcher(MoveDataFetcher):
             k: self._convert_url(v) for k, v in flds.items() if k in file_fields
         }
 
-        return flds | file_dicts
+        # Wikitext can contain unescaped HTML entities
+        unescaped_html = {k: unescape(v) for k, v in flds.items() if "&" in k}
+
+        return flds | file_dicts | unescaped_html
 
     def _list_to_moves(self, moves: list[Any]) -> list[Move]:
         """Copy all keys from res to Character."""
@@ -90,7 +93,9 @@ class CargoFetcher(MoveDataFetcher):
         # TODO: Prevent excessive API polling while we don't have a proper cache layer
 
         file_types = (File, Optional[File], Optional[list[File]])
-        field_param = ",".join([f.name for f in fields(self.move) if f.type not in file_types])
+        field_param = ",".join(
+            [f.name for f in fields(self.move) if f.type not in file_types]
+        )
         merged_params: CargoParameters = {
             "fields": field_param,
             "tables": self.table_name,
@@ -116,12 +121,11 @@ class CargoFetcher(MoveDataFetcher):
             return result
 
         fuzzy_params: CargoParameters = {
-            "where":
-            (
-            f'({self.default_key}="{char}"'
-            f' AND input LIKE "{fuzzy_string(input)}")'
-            f' OR ({self.default_key}="{char}"'
-            f' AND input LIKE "{fuzzy_string(reverse_notation(input))}")'
+            "where": (
+                f'({self.default_key}="{char}"'
+                f' AND input LIKE "{fuzzy_string(input)}")'
+                f' OR ({self.default_key}="{char}"'
+                f' AND input LIKE "{fuzzy_string(reverse_notation(input))}")'
             )
         }
 
@@ -142,7 +146,7 @@ class CargoFetcher(MoveDataFetcher):
             "fields": default_field,
         }
         data = cargo_export(self.client, iter_params)
-        return (c[default_field] for c in data)
+        return (self._mutate_fields(c)[default_field] for c in data)
 
     def __len__(self) -> int:
         """Get the character count."""
