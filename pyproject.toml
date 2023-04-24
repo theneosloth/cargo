@@ -27,7 +27,7 @@ types-beautifulsoup4 = "^4.11.1"
 exceptiongroup = "^1.0.4"
 
 [tool.poetry.scripts]
-api = "hunting_hawk.web.api:start"
+api = "hunting_hawk.web.start:start"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.262"
