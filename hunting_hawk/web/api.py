@@ -1,10 +1,8 @@
 """REST web service for retreiving frame data"""
 
-import os
 from json import loads
 from typing import Callable, List, Optional
 
-import uvicorn
 from fastapi import BackgroundTasks, FastAPI
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -154,12 +152,3 @@ def get_move_kofxv(
 #     background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 # ) -> list[Move] | JSONResponse:
 #     return get_moves(BBCF, background_tasks)(character, move)
-
-
-def start() -> None:
-    port = int(os.getenv("HUNTING_HAWK_PORT", "8080"))
-    uvicorn.run("hunting_hawk.web.api:app", host="0.0.0.0", port=port, reload=True)
-
-
-if __name__ == "__main__":
-    start()
