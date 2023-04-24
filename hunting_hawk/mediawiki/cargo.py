@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Any, List, TypedDict
 
-from .client import Client, ClientError, cached_get
+from .client import Client, ClientError, get
 
 DEFAULT_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 DEFAULT_TABLES_PATH = "Special:CargoTables"
@@ -65,7 +65,7 @@ def cargo_export(cargo: CargoClient, params: CargoParameters) -> list[Any]:
     req_params = {"limit": cargo.limit} | params
 
     try:
-        res = cached_get(cargo, cargo.export_endpoint(), req_params)
+        res = get(cargo, cargo.export_endpoint(), req_params)
     except ClientError as e:
         raise CargoNetworkError from e
 
