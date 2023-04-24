@@ -59,21 +59,30 @@ class CargoFetcher(MoveDataFetcher):
             case str():
                 return get_file_path(self.client, val)
 
-    def _mutate_fields(self, flds: dict[Any, Any]) -> dict[Any, Any]:
-        file_fields = [
+    def _unescape_html(self, val: list[str] | str) -> list[str] | str:
+        match val:
+            case list():
+                # TODO: DEFINITELY NUKE THIS
+                # Wiki returns &amp for incomplete codes
+                return [unescape(unescape(link)) for link in val]
+            case str():
+                return unescape(val)
+
+    def file_fields(self) -> list[str]:
+        return [
             f.name
             for f in fields(self.move)
             if f.type == Optional[File] or f.type == Optional[list[File]]
         ]
 
+    def _mutate_fields(self, flds: dict[Any, Any]) -> dict[Any, Any]:
         file_dicts = {
-            k: self._convert_url(v) for k, v in flds.items() if k in file_fields
+            k: self._convert_url(v) for k, v in flds.items() if k in self.file_fields()
         }
 
-        # Wikitext can contain unescaped HTML entities
-        unescaped_html = {k: unescape(v) for k, v in flds.items() if "&" in k}
-
-        return flds | file_dicts | unescaped_html
+        # wikitext can contain unescaped html entities
+        unescaped_html = {k: self._unescape_html(v) for k, v in flds.items()}
+        return flds | unescaped_html | file_dicts
 
     def _list_to_moves(self, moves: list[Any]) -> list[Move]:
         """Copy all keys from res to Character."""
@@ -88,35 +97,34 @@ class CargoFetcher(MoveDataFetcher):
 
         return res
 
-    def _get(self, params: CargoParameters) -> list[Move]:
+    def _get(self, params: CargoParameters, retrieve_images: bool) -> list[Move]:
         """Wrap around cargo_export."""
-        # TODO: Prevent excessive API polling while we don't have a proper cache layer
 
-        file_types = (File, Optional[File], Optional[list[File]])
-        field_param = ",".join(
-            [f.name for f in fields(self.move) if f.type not in file_types]
-        )
+        file_fields = self.file_fields()
+        field_param = [f.name for f in fields(self.move) if f.name not in file_fields]
+
+        if retrieve_images:
+            field_param = field_param + file_fields
+
         merged_params: CargoParameters = {
-            "fields": field_param,
+            "fields": ",".join(field_param),
             "tables": self.table_name,
         }
-
         result = cargo_export(self.client, merged_params | params)
         return self._list_to_moves(result)
 
     def get_moves(self, char: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
-        params: CargoParameters = {
-            "where": f"chara='{char}'",
-        }
-        return self._get(params)
+
+        params: CargoParameters = {"where": f"chara='{char}'"}
+        return self._get(params, False)
 
     def get_moves_by_input(self, char: str, input: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
         exact_params: CargoParameters = {
             "where": f'{self.default_key}="{char}" AND input="{input}"',
         }
-        result = self._get(exact_params)
+        result = self._get(exact_params, True)
         if result:
             return result
 
@@ -129,10 +137,10 @@ class CargoFetcher(MoveDataFetcher):
             )
         }
 
-        return self._get(fuzzy_params)
+        return self._get(fuzzy_params, True)
 
     def query(self, char: str, query: CargoParameters) -> list[Move]:
-        return self._get(query)
+        return self._get(query, True)
 
     def __getitem__(self, char: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
