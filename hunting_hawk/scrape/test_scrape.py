@@ -1,10 +1,15 @@
+import os
+import pytest
 from inspect import signature
 
 from hunting_hawk.mediawiki.cargo import CargoClient
 
 from . import scrape
 
+RUN_SMOKE = os.getenv("HUNTING_HAWK_SMOKE", False)
 
+
+@pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
 def test_name_to_type() -> None:
     test_cases = [
         ("String", str),
@@ -21,6 +26,7 @@ def test_name_to_type() -> None:
         assert scrape.name_to_type(wiki_string) == expected_type
 
 
+@pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
 def test_scrape_ggst() -> None:
     WIKI_DOMAIN = "https://dustloop.com"
     WIKI_BASE_PATH = "/wiki/index.php"
@@ -47,6 +53,7 @@ def test_scrape_ggst() -> None:
         assert hasattr(instance, attr)
 
 
+@pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
 def test_scrape_kofxv() -> None:
     WIKI_DOMAIN = "https://dreamcancel.com"
     WIKI_BASE_PATH = "/wiki"
