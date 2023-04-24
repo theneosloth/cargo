@@ -16,7 +16,7 @@ cargo = CargoClient(
     WIKI_TABLES_PATH,
 )
 
-__all__ = ["UNICLR", "MBTL"]
+__all__ = ["MBTL"]
 
-UNICLR = CargoFetcher(cargo, "UNICLR_MoveData")
+# UNICLR = CargoFetcher(cargo, "UNICLR_MoveData")
 MBTL = CargoFetcher(cargo, "MBTL_MoveData")
