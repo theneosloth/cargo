@@ -34,7 +34,7 @@ jobs:
       run: nix build .#dockerStream && ./result | docker load
 
     - name: Build and push Docker image
-      run: docker push theneosloth/huntinghawk:latest
+      run: docker push neosloth/huntinghawk:latest
 
     - uses: superfly/flyctl-actions/setup-flyctl@master
     - name: Deploy
