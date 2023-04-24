@@ -39,6 +39,7 @@
                   devShells.default = pkgs.mkShell {
                       packages = [
                           pkgs.redis
+                          pkgs.flyctl
                           (mkPoetryEnv{
                               projectDir = self;
                               overrides = overrides;
