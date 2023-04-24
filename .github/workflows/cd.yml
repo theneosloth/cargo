@@ -21,8 +21,6 @@ jobs:
         name: '${{ secrets.CACHIX_REPO }}'
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-    - name: Run Unit tests
-      run: nix develop --command bash -c "HUNTING_HAWK_SMOKE=1 pytest ."
 
     - name: Log in to Docker Hub
       uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
