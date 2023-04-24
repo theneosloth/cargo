@@ -1,12 +1,7 @@
 from .dreamcancel import KOFXV
 from .dustloop import BBCF, GGACR, GGST
-import pytest
-import os
-
-RUN_SMOKE = os.getenv("HUNTING_HAWK_SMOKE", False)
 
 
-@pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
 def test_data_smoke() -> None:
     assert len(KOFXV.get_moves_by_input("Kyo Kusanagi", "214236A/C")) == 1
     assert (KOFXV["Kyo Kusanagi"]) is not None
