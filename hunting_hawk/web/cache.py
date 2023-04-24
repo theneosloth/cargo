@@ -1,5 +1,6 @@
 import os
 import redis
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 from hunting_hawk.scrape.scrape import Move
@@ -108,7 +109,10 @@ class FallbackCache(Cache):
             self.redis_cache = RedisCache(host, port, db)
             if self.redis_cache.client.ping():
                 self.selected_cache = self.redis_cache
+            else:
+                logging.error("Redis ping failed")
         except (ValueError, redis.exceptions.ConnectionError):
+            logging.warning("Unable to connect to Redis, falling back to an in memory dict")
             pass
 
     def get(self, key: str) -> Optional[str]:

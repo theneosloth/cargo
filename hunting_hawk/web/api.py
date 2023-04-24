@@ -89,8 +89,8 @@ def get_characters_ggacr(background_tasks: BackgroundTasks) -> List[str]:
 
 
 @app.get("/GGACR/characters/{character}/", response_model=List[GGACR.move])  # type: ignore
-def get_move_ggacr( background_tasks: BackgroundTasks,
-    character: str, move: Optional[str] = None
+def get_move_ggacr(
+    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 ) -> list[Move] | JSONResponse:
     return get_moves(GGACR, background_tasks)(character, move)
 
@@ -100,12 +100,12 @@ def get_characters_mbtl(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(MBTL, background_tasks)()
 
 
-
 @app.get("/MBTL/characters/{character}/", response_model=List[MBTL.move])  # type: ignore
-def get_move_mbtl(background_tasks: BackgroundTasks,
-    character: str, move: Optional[str] = None
+def get_move_mbtl(
+    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 ) -> list[Move] | JSONResponse:
     return get_moves(MBTL, background_tasks)(character, move)
+
 
 @app.get("/SCVI/characters/", response_model=List[str])
 def get_characters_scvi(background_tasks: BackgroundTasks) -> List[str]:
@@ -113,8 +113,8 @@ def get_characters_scvi(background_tasks: BackgroundTasks) -> List[str]:
 
 
 @app.get("/SCVI/characters/{character}/", response_model=List[SCVI.move])  # type: ignore
-def get_move_scvi(background_tasks: BackgroundTasks,
-    character: str, move: Optional[str] = None
+def get_move_scvi(
+    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 ) -> list[Move] | JSONResponse:
     return get_moves(SCVI, background_tasks)(character, move)
 
@@ -125,8 +125,8 @@ def get_characters_sf6(background_tasks: BackgroundTasks) -> List[str]:
 
 
 @app.get("/SF6/characters/{character}/", response_model=List[SCVI.move])  # type: ignore
-def get_move_sf6(background_tasks: BackgroundTasks,
-    character: str, move: Optional[str] = None
+def get_move_sf6(
+    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 ) -> list[Move] | JSONResponse:
     return get_moves(SF6, background_tasks)(character, move)
 
@@ -137,8 +137,8 @@ def get_characters_kofxv(background_tasks: BackgroundTasks) -> List[str]:
 
 
 @app.get("/KOFXV/characters/{character}/", response_model=List[KOFXV.move])  # type: ignore
-def get_move_kofxv(background_tasks: BackgroundTasks,
-    character: str, move: Optional[str] = None
+def get_move_kofxv(
+    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 ) -> list[Move] | JSONResponse:
     return get_moves(KOFXV, background_tasks)(character, move)
 
@@ -149,8 +149,8 @@ def get_characters_bbcf(background_tasks: BackgroundTasks) -> List[str]:
 
 
 @app.get("/BBCF/characters/{character}/", response_model=List[BBCF.move])  # type: ignore
-def get_move_bbcf(background_tasks: BackgroundTasks,
-    character: str, move: Optional[str] = None
+def get_move_bbcf(
+    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 ) -> list[Move] | JSONResponse:
     return get_moves(BBCF, background_tasks)(character, move)
 

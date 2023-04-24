@@ -4,6 +4,7 @@ from typing import Any
 
 import requests
 import requests_cache
+import logging
 
 from .__version__ import VERSION
 
@@ -53,6 +54,7 @@ def raw_cached_get(
 
     s = requests_cache.CachedSession(use_temp=True)
     url = prepped.url
+    logging.info(f"Making a request to {url}")
 
     if url is None:
         raise ClientError("Failed to construct url.")
