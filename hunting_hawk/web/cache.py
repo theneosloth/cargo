@@ -111,8 +111,10 @@ class FallbackCache(Cache):
                 self.selected_cache = self.redis_cache
             else:
                 logging.error("Redis ping failed")
-        except (ValueError, redis.exceptions.ConnectionError):
-            logging.warning("Unable to connect to Redis, falling back to an in memory dict")
+        except (ValueError, redis.exceptions.ConnectionError) as e:
+            logging.warning(
+                f"Unable to connect to Redis, falling back to an in memory dict: {e}"
+            )
             pass
 
     def get(self, key: str) -> Optional[str]:
