@@ -1,6 +1,8 @@
 import os
 import redis
 import logging
+from urllib.parse import urlparse
+
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 from hunting_hawk.scrape.scrape import Move
@@ -34,8 +36,8 @@ class Cache(ABC):
 class RedisCache(Cache):
     expiry: int = 60 * 60 * 24 * 7
 
-    def __init__(self, host: str, port: int, db: int) -> None:
-        self.client = redis.StrictRedis(host=host, port=port, db=db)
+    def __init__(self, **kwargs: Any) -> None:
+        self.client = redis.StrictRedis(**kwargs)
 
     def get(self, key: str) -> Optional[str]:
         if val := self.client.get(key):
@@ -106,7 +108,14 @@ class FallbackCache(Cache):
             host = os.environ.get("REDIS_HOST", "localhost")
             port = int(os.environ.get("REDIS_PORT", 6379))
             db = int(os.environ.get("REDIS_DB", 0))
-            self.redis_cache = RedisCache(host, port, db)
+            url = urlparse(host)
+            self.redis_cache = RedisCache(
+                host=url.hostname,
+                username=url.username,
+                password=url.password,
+                port=port,
+                db=db,
+            )
             if self.redis_cache.client.ping():
                 self.selected_cache = self.redis_cache
             else:
