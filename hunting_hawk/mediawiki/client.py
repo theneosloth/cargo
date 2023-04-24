@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import requests
-import requests_cache
 import logging
 
 from .__version__ import VERSION
@@ -44,15 +43,13 @@ class ClientApiError(ClientError):
     """Exception class for cargo exceptions related to API failures."""
 
 
-def raw_cached_get(
-    client: Client, path: str, params: dict[str, Any]
-) -> requests.Response:
+def raw_get(client: Client, path: str, params: dict[str, Any]) -> requests.Response:
     """Call a given URL. Caches the response"""
     req_params = params
     req = requests.Request("GET", path, headers=client.headers, params=req_params)
     prepped = req.prepare()
 
-    s = requests_cache.CachedSession(use_temp=True)
+    s = requests.session()
     url = prepped.url
     logging.info(f"Making a request to {url}")
 
@@ -66,12 +63,12 @@ def raw_cached_get(
         raise ClientNetworkError from e
 
 
-def cached_get(
+def get(
     client: Client, path: str, params: dict[str, Any]
 ) -> list[str] | dict[Any, Any]:
     """Call a given URL. Caches the response"""
     try:
-        res = raw_cached_get(client, path, params).json()
+        res = raw_get(client, path, params).json()
     except requests.exceptions.JSONDecodeError as e:
         raise ClientDecodeError from e
 
