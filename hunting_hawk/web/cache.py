@@ -40,9 +40,8 @@ class RedisCache(Cache):
         self.client = redis.StrictRedis(**kwargs)
 
     def get(self, key: str) -> Optional[str]:
-        if val := self.client.get(key):
-            return val.decode("utf-8")
-        return None
+        res = self.client.get(key)
+        return res
 
     def set(self, key: str, val: str) -> Optional[bool]:
         return self.client.set(key, val, ex=self.expiry)
