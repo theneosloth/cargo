@@ -1,17 +1,20 @@
 """REST web service for retreiving frame data"""
 
 import os
-from typing import List, Optional, Callable
-from .cache import FallbackCache
-import uvicorn
 from json import loads
-from fastapi import FastAPI, BackgroundTasks
-from fastapi.responses import JSONResponse
+from typing import Callable, List, Optional
+
+import uvicorn
+from fastapi import BackgroundTasks, FastAPI
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+
 from hunting_hawk.scrape.scrape import Move
-from hunting_hawk.sites.fetcher import CargoFetcher
 from hunting_hawk.sites.dreamcancel import KOFXV
-from hunting_hawk.sites.supercombo import SCVI, SF6
+from hunting_hawk.sites.fetcher import CargoFetcher
+from hunting_hawk.sites.supercombo import SF6
+
+from .cache import FallbackCache
 
 app = FastAPI()
 cache = FallbackCache()
@@ -122,7 +125,7 @@ def get_characters_sf6(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(SF6, background_tasks)()
 
 
-@app.get("/SF6/characters/{character}/", response_model=List[SCVI.move])  # type: ignore
+@app.get("/SF6/characters/{character}/", response_model=List[SF6.move])  # type: ignore
 def get_move_sf6(
     background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 ) -> list[Move] | JSONResponse:
