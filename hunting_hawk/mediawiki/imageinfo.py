@@ -18,11 +18,11 @@ class ImageInfoInfo(BaseModel):
 
 
 class ImageInfoPage(BaseModel):
-    pageid: Optional[int]
+    pageid: int
     ns: int
     title: str
     imagerepository: str
-    imageinfo: Optional[List[ImageInfoInfo]]
+    imageinfo: List[ImageInfoInfo]
 
 
 class ImageInfoQuery(BaseModel):
