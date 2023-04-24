@@ -1,4 +1,7 @@
 # CargoExport
+![Tests](https://github.com/theneosloth/cargo/actions/workflows/ci.yml/badge.svg)
+![Deployment](https://github.com/theneosloth/cargo/actions/workflows/cd.yml/badge.svg)
+
 Export utilities for mediawiki cargo tables
 
 Cargo table definitions are dynamically parsed into Pydantic dataclasses.
