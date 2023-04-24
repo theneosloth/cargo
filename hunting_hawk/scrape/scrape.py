@@ -3,6 +3,7 @@ from dataclasses import field, make_dataclass
 from typing import Any, Generator, NewType, Optional, cast
 
 import requests
+import logging
 from bs4 import BeautifulSoup
 from pydantic.dataclasses import DataclassProxy, dataclass
 
@@ -48,6 +49,7 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
     tables_endpoint = cargo.tables_endpoint()
 
     table_url = f"{tables_endpoint}/{table_name}"
+    logging.info(f"Attempting to scrape {table_url}")
     try:
         req = requests.get(table_url, headers=cargo.headers, timeout=cargo.timeout)
     except requests.exceptions.HTTPError as e:

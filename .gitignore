@@ -1,5 +1,6 @@
 http_cache.sqlite
 result
+dump.rdb
 fly.toml
 pyrightconfig.json
 .idea/
