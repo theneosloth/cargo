@@ -1,10 +1,14 @@
+import pytest
+import os
 from . import client, imageinfo
 
 mediawiki_client = client.Client(
     domain="https://en.wikipedia.org/w/", base_path="api.php"
 )
 
+RUN_SMOKE = os.getenv("HUNTING_HAWK_SMOKE", False)
 
+@pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
 def test_get_image_info() -> None:
     resp = imageinfo.get_image_info(
         mediawiki_client, imageinfo.ImageName("File:Billy_Tipton.jpg")

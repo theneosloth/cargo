@@ -16,16 +16,9 @@
                 pkgs = nixpkgs.legacyPackages.${system};
                 overrides = defaultPoetryOverrides.extend
                     (self: super: {
-                                  beautifulsoup4 = super.beautifulsoup4.overridePythonAttrs(
-                                      old: {
-                                          buildInputs = (old.buildInputs or [ ]) ++ [ super.hatchling ];
-                                      }
-                                  );
-                                  url-normalize = super.url-normalize.overridePythonAttrs(
-                                      old: {
-                                          buildInputs = (old.buildInputs or [ ]) ++ [ super.poetry ];
-                                      }
-                                  );
+                        ruff = super.ruff.override {
+                            preferWheel = true;
+                        };
                     });
             in
               {
@@ -35,16 +28,17 @@
                           overrides = overrides;
                       };
 
-                      docker-stream =  pkgs.dockerTools.streamLayeredImage {
-                          name = "neosloth/huntinghawk";
+                      dockerStream =  pkgs.dockerTools.streamLayeredImage {
+                          name = "theneosloth/huntinghawk";
                           tag = "latest";
-                          created = builtins.substring 0 8 self.lastModifiedDate;
+                          created = "now";
                           config = { Cmd = [ "${self.packages.${system}.default}/bin/api" ]; };
                       };
                   };
 
                   devShells.default = pkgs.mkShell {
                       packages = [
+                          pkgs.redis
                           (mkPoetryEnv{
                               projectDir = self;
                               overrides = overrides;

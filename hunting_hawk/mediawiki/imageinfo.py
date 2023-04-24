@@ -1,5 +1,5 @@
 """Image info api endpoint wrapper"""
-from typing import Dict, List, NewType, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, ValidationError
 
@@ -18,11 +18,11 @@ class ImageInfoInfo(BaseModel):
 
 
 class ImageInfoPage(BaseModel):
-    pageid: int
+    pageid: Optional[int]
     ns: int
     title: str
     imagerepository: str
-    imageinfo: List[ImageInfoInfo]
+    imageinfo: Optional[List[ImageInfoInfo]]
 
 
 class ImageInfoQuery(BaseModel):
