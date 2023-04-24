@@ -1,9 +1,8 @@
 from .numpad import NotationMap
-from html import unescape
 
 
 def normalize(input: str) -> str:
-    return unescape(input.strip()).upper()
+    return " ".join(input.strip().upper().split())
 
 
 # TODO: Only works on the first instance of the input
@@ -18,6 +17,4 @@ def reverse_notation(input: str) -> str:
 
 
 def fuzzy_string(input: str) -> str:
-    normalized = normalize(input)
-    valid_inputs = [input for input in normalized if input not in [",", "."]]
-    return f"{'%'.join(valid_inputs)}"
+    return f"%{input}%"

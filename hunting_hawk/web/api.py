@@ -23,11 +23,8 @@ def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list
     def wrapped() -> list[str]:
         # Not sure why it doesnt see the attr
         cache_key = f"{m.table_name}:CHARACTERS:ALL"
-        print(f"Hitting cache with {cache_key}")
         if r := cache.get_list(cache_key):
-            print(r)
-            if len(r) > 0:
-                return r
+            return r
 
         res = list(m)
         tasks.add_task(cache.set_list, cache_key, res)
@@ -45,11 +42,8 @@ def get_moves(
         if move is not None:
             cache_key = f"{m.table_name}:CHARACTERS:{character}:{move}"
             if r := cache.get(cache_key):
-                try:
-                    resp = loads(r)
-                    return JSONResponse(content=jsonable_encoder(resp))
-                except Exception:
-                    raise Exception
+                resp = loads(r)
+                return JSONResponse(content=jsonable_encoder(resp))
             moves = m.get_moves_by_input(character, move)
         else:
             cache_key = f"{m.table_name}:CHARACTERS:{character}:ALL"
