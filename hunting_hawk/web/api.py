@@ -1,15 +1,13 @@
 """REST web service for retreiving frame data"""
 
 from json import loads
-from typing import Callable, List, Optional
+from typing import List, Optional
 
 from fastapi import BackgroundTasks, FastAPI
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from hunting_hawk.scrape.scrape import Move
-from hunting_hawk.sites.dreamcancel import KOFXV
-from hunting_hawk.sites.fetcher import CargoFetcher
 from hunting_hawk.sites.supercombo import SF6
 
 from .cache import FallbackCache
@@ -18,42 +16,42 @@ app = FastAPI()
 cache = FallbackCache()
 
 
-def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
-    def wrapped() -> list[str]:
-        # Not sure why it doesnt see the attr
-        cache_key = f"{m.table_name}:CHARACTERS:ALL"
-        if r := cache.get_list(cache_key):
-            return r
+# def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
+#     def wrapped() -> list[str]:
+#         # Not sure why it doesnt see the attr
+#         cache_key = f"{m.table_name}:CHARACTERS:ALL"
+#         if r := cache.get_list(cache_key):
+#             return r
 
-        res = list(m)
-        tasks.add_task(cache.set_list, cache_key, res)
-        return res
+#         res = list(m)
+#         tasks.add_task(cache.set_list, cache_key, res)
+#         return res
 
-    return wrapped
+#     return wrapped
 
 
-def get_moves(
-    m: CargoFetcher, tasks: BackgroundTasks
-) -> Callable[[str, Optional[str]], list[Move] | JSONResponse]:
-    def wrapped(
-        character: str, move: Optional[str] = None
-    ) -> list[Move] | JSONResponse:
-        if move is not None:
-            cache_key = f"{m.table_name}:CHARACTERS:{character}:{move}"
-            if r := cache.get(cache_key):
-                resp = loads(r)
-                return JSONResponse(content=jsonable_encoder(resp))
-            moves = m.get_moves_by_input(character, move)
-        else:
-            cache_key = f"{m.table_name}:CHARACTERS:{character}:ALL"
-            if r := cache.get(cache_key):
-                resp = loads(r)
-                return JSONResponse(content=jsonable_encoder(resp))
-            moves = m.get_moves(character)
-        tasks.add_task(cache.set_model, cache_key, moves)
-        return moves
+# def get_moves(
+#     m: CargoFetcher, tasks: BackgroundTasks
+# ) -> Callable[[str, Optional[str]], list[Move] | JSONResponse]:
+#     def wrapped(
+#         character: str, move: Optional[str] = None
+#     ) -> list[Move] | JSONResponse:
+#         if move is not None:
+#             cache_key = f"{m.table_name}:CHARACTERS:{character}:{move}"
+#             if r := cache.get(cache_key):
+#                 resp = loads(r)
+#                 return JSONResponse(content=jsonable_encoder(resp))
+#             moves = m.get_moves_by_input(character, move)
+#         else:
+#             cache_key = f"{m.table_name}:CHARACTERS:{character}:ALL"
+#             if r := cache.get(cache_key):
+#                 resp = loads(r)
+#                 return JSONResponse(content=jsonable_encoder(resp))
+#             moves = m.get_moves(character)
+#         tasks.add_task(cache.set_model, cache_key, moves)
+#         return moves
 
-    return wrapped
+#     return wrapped
 
 
 # @app.get("/P4U2R/characters/{character}/", response_model=List[P4U2R.move])  # type: ignore
@@ -120,26 +118,45 @@ def get_moves(
 
 @app.get("/SF6/characters/", response_model=List[str])
 def get_characters_sf6(background_tasks: BackgroundTasks) -> List[str]:
-    return get_characters(SF6, background_tasks)()
+    cache_key = f"{SF6.table_name}:CHARACTERS:ALL"
+    if r := cache.get_list(cache_key):
+        return r
+
+    res = list(SF6)
+    background_tasks.add_task(cache.set_list, cache_key, res)
+    return res
 
 
 @app.get("/SF6/characters/{character}/", response_model=List[SF6.move])  # type: ignore
 def get_move_sf6(
     background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 ) -> list[Move] | JSONResponse:
-    return get_moves(SF6, background_tasks)(character, move)
+    if move is not None:
+        cache_key = f"{SF6.table_name}:CHARACTERS:{character}:{move}"
+        if r := cache.get(cache_key):
+            resp = loads(r)
+            return JSONResponse(content=jsonable_encoder(resp))
+        moves = SF6.get_moves_by_input(character, move)
+    else:
+        cache_key = f"{SF6.table_name}:CHARACTERS:{character}:ALL"
+        if r := cache.get(cache_key):
+            resp = loads(r)
+            return JSONResponse(content=jsonable_encoder(resp))
+        moves = SF6.get_moves(character)
+    background_tasks.add_task(cache.set_model, cache_key, moves)
+    return moves
 
 
-@app.get("/KOFXV/characters/", response_model=List[str])
-def get_characters_kofxv(background_tasks: BackgroundTasks) -> List[str]:
-    return get_characters(KOFXV, background_tasks)()
+# @app.get("/KOFXV/characters/", response_model=List[str])
+# def get_characters_kofxv(background_tasks: BackgroundTasks) -> List[str]:
+#     return get_characters(KOFXV, background_tasks)()
 
 
-@app.get("/KOFXV/characters/{character}/", response_model=List[KOFXV.move])  # type: ignore
-def get_move_kofxv(
-    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
-) -> list[Move] | JSONResponse:
-    return get_moves(KOFXV, background_tasks)(character, move)
+# @app.get("/KOFXV/characters/{character}/", response_model=List[KOFXV.move])  # type: ignore
+# def get_move_kofxv(
+#     background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
+# ) -> list[Move] | JSONResponse:
+#     return get_moves(KOFXV, background_tasks)(character, move)
 
 
 # @app.get("/BBCF/characters/", response_model=List[str])
