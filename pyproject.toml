@@ -13,7 +13,7 @@ fastapi = "^0.88.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
 redis = "^4.5.4"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 mypy = "^0.940"
 pytest = "^7.1.0"
 types-requests = "^2.27.12"
@@ -24,13 +24,11 @@ pyls-isort = "^0.2.2"
 isort = "^5.10.1"
 pylsp-mypy = "^0.5.8"
 types-beautifulsoup4 = "^4.11.1"
-exceptiongroup = "^1.0.4"
+ruff = "^0.0.262"
 
 [tool.poetry.scripts]
 api = "hunting_hawk.web.start:start"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.0.262"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

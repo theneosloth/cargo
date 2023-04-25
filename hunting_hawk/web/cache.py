@@ -1,14 +1,14 @@
-import os
-import redis
 import logging
+import os
+from abc import ABC, abstractmethod
+from json import dumps
+from typing import Any, Optional
 from urllib.parse import urlparse
 
-from abc import ABC, abstractmethod
-from typing import Any, Optional
-from hunting_hawk.scrape.scrape import Move
-
+import redis
 from pydantic.json import pydantic_encoder
-from json import dumps
+
+from hunting_hawk.scrape.scrape import Move
 
 
 class Cache(ABC):
@@ -107,14 +107,18 @@ class FallbackCache(Cache):
             host = os.environ.get("REDIS_HOST", "localhost")
             port = int(os.environ.get("REDIS_PORT", 6379))
             db = int(os.environ.get("REDIS_DB", 0))
-            url = urlparse(host)
-            self.redis_cache = RedisCache(
-                host=url.hostname,
-                username=url.username,
-                password=url.password,
-                port=port,
-                db=db,
-            )
+            if host == "localhost":
+                params = {"host": host, "port": port, "db": db}
+            else:
+                url = urlparse(host)
+                params = {
+                    "host": url.hostname,
+                    "username": url.username,
+                    "password": url.password,
+                    "port": port,
+                    "db": db,
+                }
+            self.redis_cache = RedisCache(**params)
             if self.redis_cache.client.ping():
                 self.selected_cache = self.redis_cache
             else:

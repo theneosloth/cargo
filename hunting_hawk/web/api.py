@@ -1,5 +1,5 @@
 """REST web service for retreiving frame data"""
-
+import tracemalloc
 from json import loads
 from typing import Callable, List, Optional
 
@@ -140,7 +140,6 @@ def get_move_kofxv(
     background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
 ) -> list[Move] | JSONResponse:
     return get_moves(KOFXV, background_tasks)(character, move)
-
 
 # @app.get("/BBCF/characters/", response_model=List[str])
 # def get_characters_bbcf(background_tasks: BackgroundTasks) -> List[str]:
