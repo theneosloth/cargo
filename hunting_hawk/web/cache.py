@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import redis
 from pydantic.json import pydantic_encoder
 
-from hunting_hawk.mediawiki.parse import Move
+from hunting_hawk.mediawiki.cargo import Move
 
 
 class Cache(ABC):

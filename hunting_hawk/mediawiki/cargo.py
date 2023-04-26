@@ -162,8 +162,6 @@ class CargoParseError(CargoError):
 def parse_cargo_table(client: Client, table_name: str) -> DataclassProxy:
     """Dynamically construct a type for a cargo table with TABLE_NAME."""
     params = CargoFieldsParams(table=table_name).__dict__
-    print(client)
-    print(params)
     res = get(client, client.api_endpoint(), params)
     try:
         c = CargoFields.parse_obj(res)

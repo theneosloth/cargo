@@ -7,8 +7,11 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from hunting_hawk.mediawiki.cargo import Move
+from hunting_hawk.sites.dreamcancel import KOFXV
 from hunting_hawk.sites.dustloop import BBCF, GGACR, HNK, P4U2R
 from hunting_hawk.sites.fetcher import CargoFetcher
+from hunting_hawk.sites.mizuumi import MBTL
+from hunting_hawk.sites.supercombo import SF6
 
 from .cache import FallbackCache
 
@@ -104,16 +107,16 @@ def get_move_ggacr(
     return get_moves(GGACR, background_tasks)(character, move)
 
 
-# @app.get("/MBTL/characters/", response_model=List[str])
-# def get_characters_mbtl(background_tasks: BackgroundTasks) -> List[str]:
-#     return get_characters(MBTL, background_tasks)()
+@app.get("/MBTL/characters/", response_model=List[str])
+def get_characters_mbtl(background_tasks: BackgroundTasks) -> List[str]:
+    return get_characters(MBTL, background_tasks)()
 
 
-# @app.get("/MBTL/characters/{character}/", response_model=List[MBTL.move])  # type: ignore
-# def get_move_mbtl(
-#     background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
-# ) -> list[Move] | JSONResponse:
-#     return get_moves(MBTL, background_tasks)(character, move)
+@app.get("/MBTL/characters/{character}/", response_model=List[MBTL.move])  # type: ignore
+def get_move_mbtl(
+    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
+) -> list[Move] | JSONResponse:
+    return get_moves(MBTL, background_tasks)(character, move)
 
 
 # @app.get("/SCVI/characters/", response_model=List[str])
@@ -128,25 +131,25 @@ def get_move_ggacr(
 #     return get_moves(SCVI, background_tasks)(character, move)
 
 
-# @app.get("/SF6/characters/", response_model=List[str])
-# def get_characters_sf6(background_tasks: BackgroundTasks) -> List[str]:
-#     return get_characters(SF6, background_tasks)()
+@app.get("/SF6/characters/", response_model=List[str])
+def get_characters_sf6(background_tasks: BackgroundTasks) -> List[str]:
+    return get_characters(SF6, background_tasks)()
 
 
-# @app.get("/SF6/characters/{character}/", response_model=List[SF6.move])  # type: ignore
-# def get_move_sf6(
-#     background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
-# ) -> list[Move] | JSONResponse:
-#     return get_moves(SF6, background_tasks)(character, move)
+@app.get("/SF6/characters/{character}/", response_model=List[SF6.move])  # type: ignore
+def get_move_sf6(
+    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
+) -> list[Move] | JSONResponse:
+    return get_moves(SF6, background_tasks)(character, move)
 
 
-# @app.get("/KOFXV/characters/", response_model=List[str])
-# def get_characters_kofxv(background_tasks: BackgroundTasks) -> List[str]:
-#     return get_characters(KOFXV, background_tasks)()
+@app.get("/KOFXV/characters/", response_model=List[str])
+def get_characters_kofxv(background_tasks: BackgroundTasks) -> List[str]:
+    return get_characters(KOFXV, background_tasks)()
 
 
-# @app.get("/KOFXV/characters/{character}/", response_model=List[KOFXV.move])  # type: ignore
-# def get_move_kofxv(
-#     background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
-# ) -> list[Move] | JSONResponse:
-#     return get_moves(KOFXV, background_tasks)(character, move)
+@app.get("/KOFXV/characters/{character}/", response_model=List[KOFXV.move])  # type: ignore
+def get_move_kofxv(
+    background_tasks: BackgroundTasks, character: str, move: Optional[str] = None
+) -> list[Move] | JSONResponse:
+    return get_moves(KOFXV, background_tasks)(character, move)
