@@ -1,5 +1,4 @@
 """REST web service for retreiving frame data"""
-from json import loads
 from typing import Callable, List, Optional
 
 from fastapi import BackgroundTasks, FastAPI
