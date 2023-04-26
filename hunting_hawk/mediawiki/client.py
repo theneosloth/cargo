@@ -33,8 +33,6 @@ class Client:
 class ClientError(Exception):
     """Base class for cargo thrown exceptions."""
 
-    pass
-
 
 class ClientNetworkError(ClientError):
     """Exception class for cargo exceptions related to network failures."""

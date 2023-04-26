@@ -58,12 +58,12 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
     # More issues with stubs
     (table,) = tree.xpath("//*[@id='mw-content-text']/*[self::ul or self::ol]")  # type: ignore
 
-    if table is None or not type(table) is etree._Element:
+    if table is None or type(table) is not etree._Element:
         raise CargoNetworkError(f"Could not find table. at {table_url}")
 
     items = table.xpath("./li")
 
-    if not items or not type(items) is list:
+    if not items or type(items) is not list:
         raise CargoParseError(f"Could not find list items for list at {table_url}")
 
     field_names = [
