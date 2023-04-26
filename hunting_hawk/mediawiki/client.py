@@ -1,9 +1,9 @@
 """A wrapper for basic Mediawiki API features"""
+import logging
 from dataclasses import dataclass, field
 from typing import Any
 
 import requests
-import logging
 
 from .__version__ import VERSION
 
@@ -11,7 +11,8 @@ from .__version__ import VERSION
 @dataclass(eq=True, frozen=True)
 class Client:
     domain: str
-    base_path: str
+    index_path: str
+    api_path: str
     headers: dict[str, str] = field(
         default_factory=lambda: {
             "User-Agent": f"cargo-export/{VERSION}. https://github.com/theneosloth/cargo"
@@ -21,14 +22,16 @@ class Client:
     timeout: int = field(default=10, kw_only=True)
 
     def index_endpoint(self) -> str:
+        """Construct a mediawiki root endpoint for a given mediawiki site."""
+        return f"{self.domain}{self.index_path}"
+
+    def api_endpoint(self) -> str:
         """Construct a mediawiki API endpoint for a given mediawiki site."""
-        return f"{self.domain}{self.base_path}"
+        return f"{self.domain}{self.api_path}"
 
 
 class ClientError(Exception):
     """Base class for cargo thrown exceptions."""
-
-    pass
 
 
 class ClientNetworkError(ClientError):

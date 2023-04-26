@@ -48,7 +48,7 @@ class ImageInfoParams(BaseModel):
 
 def get_image_info(client: Client, image_name: ImageName) -> ImageInfoResponse:
     params = ImageInfoParams(titles=image_name).__dict__
-    res = get(client, client.index_endpoint(), params)
+    res = get(client, client.api_endpoint(), params)
     try:
         return ImageInfoResponse.parse_obj(res)
     except ValidationError as e:

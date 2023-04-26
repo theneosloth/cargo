@@ -1,15 +1,20 @@
 """Generic wrapper for a MediaWiki cargo page."""
+import logging
 from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import fields
 from functools import cached_property
-from typing import Any, Iterator, Optional
 from html import unescape
+from typing import Any, Iterator, Optional
+
 from pydantic.dataclasses import DataclassProxy
 
-from hunting_hawk.mediawiki.cargo import CargoClient, CargoParameters, cargo_export
+from hunting_hawk.mediawiki.cargo import (CargoClient, CargoParameters, File, Move,
+                                          cargo_export, parse_cargo_table)
+from hunting_hawk.mediawiki.client import ClientApiError, ClientNetworkError
 from hunting_hawk.mediawiki.filepath import get_file_path
-from hunting_hawk.scrape.scrape import File, Move, parse_cargo_table
+from hunting_hawk.mediawiki.scrape.scrape import \
+    parse_cargo_table as fallback_parse_table
 from hunting_hawk.util.normalize import fuzzy_string, reverse_notation
 
 __all__ = ["CargoFetcher", "MoveDataFetcher"]
@@ -49,7 +54,13 @@ class CargoFetcher(MoveDataFetcher):
     @cached_property
     def move(self) -> DataclassProxy:
         """Lazy load the cargo table definition."""
-        return parse_cargo_table(self.client, self.table_name)
+        try:
+            return parse_cargo_table(self.client, self.table_name)
+        except (ClientApiError, ClientNetworkError) as e:
+            logging.info(
+                f"Table parse failed with:{e} . Falling back to an HTML parser."
+            )
+            return fallback_parse_table(self.client, self.table_name)
 
     # TODO: Use type annotations
     def _convert_url(self, val: list[str] | str) -> list[str] | str:

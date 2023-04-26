@@ -1,29 +1,17 @@
 """Scrape wikipedia for type definitons of a cargo table."""
+import logging
 from dataclasses import field, make_dataclass
-from typing import Any, Generator, NewType, Optional, cast
+from io import StringIO
+from typing import Optional, cast
 
 import requests
-import logging
-from bs4 import BeautifulSoup
+from lxml import etree
 from pydantic.dataclasses import DataclassProxy, dataclass
 
-from hunting_hawk.mediawiki.cargo import CargoClient, CargoNetworkError, CargoParseError
+from hunting_hawk.mediawiki.cargo import (CargoClient, CargoNetworkError,
+                                          CargoParseError, File, Wikitext)
 
-"""Web scraping functions."""
-
-Move = NewType("Move", type)
-
-
-class File(str):
-    @classmethod
-    def __get_validators__(cls) -> Generator[Any, None, None]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v) -> None:  # type: ignore
-        if not isinstance(v, str):
-            raise TypeError("Not a string value")
-        return v  # type: ignore
+"""Web scraping functions that do not call the mediawiki API."""
 
 
 def name_to_type(name: str) -> type:
@@ -35,8 +23,10 @@ def name_to_type(name: str) -> type:
             return int
         case ["file"]:
             return File
-        case ["string" | "wikitext", *_]:
+        case ["string", *_]:
             return str
+        case ["wikitext", *_]:
+            return Wikitext
         case ["list", "of", t, *_]:
             # Mypy does not handle dynamic type names
             return cast(type, list[name_to_type(t)])  # type: ignore
@@ -59,20 +49,25 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
 
     req.raise_for_status()
 
-    data = req.content
+    data = req.content.decode("utf-8")
 
-    soup = BeautifulSoup(data, features="html.parser")
+    parser = etree.HTMLParser()
+    # Stub library is incorrect, HTML Parser is a valid argument
+    tree = etree.parse(StringIO(data), parser)  # type: ignore
 
-    table = soup.select_one("#mw-content-text > ul")
+    # More issues with stubs
+    (table,) = tree.xpath("//*[@id='mw-content-text']/*[self::ul or self::ol]")  # type: ignore
 
-    if not table:
-        # TODO: Refactor into a generic class
-        table = soup.select_one("#mw-content-text > ol")
-        if not table:
-            raise CargoNetworkError(f"Could not find table. at {table_url}")
+    if table is None or type(table) is not etree._Element:
+        raise CargoNetworkError(f"Could not find table. at {table_url}")
+
+    items = table.xpath("./li")
+
+    if not items or type(items) is not list:
+        raise CargoParseError(f"Could not find list items for list at {table_url}")
 
     field_names = [
-        [t.strip() for t in tag.text.split("-")] for tag in table.find_all("li")
+        [t.strip() for t in "".join(tag.xpath(".//text()")).split("-")] for tag in items  # type: ignore
     ]
 
     fields = [

@@ -19,6 +19,11 @@
                         ruff = super.ruff.override {
                             preferWheel = true;
                         };
+                        lxml-stubs = super.lxml-stubs.overridePythonAttrs (
+                            old: {
+                                buildInputs = (old.buildInputs or [ ]) ++ [ super.setuptools ];
+                            }
+                        );
                     });
             in
               {
