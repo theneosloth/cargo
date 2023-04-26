@@ -29,7 +29,11 @@ class Cache(ABC):
         pass
 
     @abstractmethod
-    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
+    def set_model(self, key: str, val: list[Move]) -> list[Any]:
+        pass
+
+    @abstractmethod
+    def get_model(self, key: str) -> Optional[dict[Any, Any]]:
         pass
 
 
@@ -56,9 +60,20 @@ class RedisCache(Cache):
         pipe.expire(key, self.expiry)
         return pipe.execute()
 
-    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
-        json_vals = dumps(val, indent=2, default=pydantic_encoder)
-        return self.client.set(key, json_vals, ex=self.expiry)
+    def set_model(self, key: str, val: list[Move]) -> list[Any]:
+        json_vals = dumps(val, default=pydantic_encoder)
+        pipe = self.client.pipeline()
+        pipe.json().set(key, "$", json_vals)
+        pipe.expire(key, self.expiry)
+        return pipe.execute()
+
+    def get_model(self, key: str) -> Optional[dict[Any, Any]]:
+        res = self.client.json().get(key)
+        match res:
+            case dict():
+                return res
+            case _:
+                return None
 
 
 class DictCache(Cache):
@@ -92,17 +107,27 @@ class DictCache(Cache):
         self._data[key] = val
         return val
 
-    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
+    def set_model(self, key: str, val: list[Move]) -> list[Any]:
         json_vals = dumps(val, indent=2, default=pydantic_encoder)
         self._data[key] = json_vals
-        return True
+        return []
+
+    def get_model(self, key: str) -> Optional[dict[Any, Any]]:
+        if key not in self._data[key]:
+            return {}
+        val = self._data[key]
+        match val:
+            case dict():
+                return val
+            case _:
+                self._data[key] = None
+                return None
 
 
 class FallbackCache(Cache):
     selected_cache: Cache
 
     def __init__(self) -> None:
-        self.selected_cache = DictCache()
         try:
             host = os.environ.get("REDIS_HOST", "localhost")
             port = int(os.environ.get("REDIS_PORT", 6379))
@@ -122,12 +147,12 @@ class FallbackCache(Cache):
             if self.redis_cache.client.ping():
                 self.selected_cache = self.redis_cache
             else:
-                logging.error("Redis ping failed")
+                raise ValueError("Redis ping failed")
         except (ValueError, redis.exceptions.ConnectionError) as e:
             logging.warning(
                 f"Unable to connect to Redis, falling back to an in memory dict: {e}"
             )
-            pass
+            self.selected_cache = DictCache()
 
     def get(self, key: str) -> Optional[str]:
         return self.selected_cache.get(key)
@@ -141,5 +166,8 @@ class FallbackCache(Cache):
     def set_list(self, key: str, val: list[str]) -> list[Any]:
         return self.selected_cache.set_list(key, val)
 
-    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
+    def set_model(self, key: str, val: list[Move]) -> list[Any]:
         return self.selected_cache.set_model(key, val)
+
+    def get_model(self, key: str) -> dict[Any, Any]:
+        return self.selected_cache.get_model(key)

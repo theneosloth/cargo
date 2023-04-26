@@ -41,15 +41,13 @@ def get_moves(
     ) -> list[Move] | JSONResponse:
         if move is not None:
             cache_key = f"{m.table_name}:CHARACTERS:{character}:{move}"
-            if r := cache.get(cache_key):
-                resp = loads(r)
-                return JSONResponse(content=jsonable_encoder(resp))
+            if r := cache.get_model(cache_key):
+                return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves_by_input(character, move)
         else:
             cache_key = f"{m.table_name}:CHARACTERS:{character}:ALL"
-            if r := cache.get(cache_key):
-                resp = loads(r)
-                return JSONResponse(content=jsonable_encoder(resp))
+            if r := cache.get_model(cache_key):
+                return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves(character)
         tasks.add_task(cache.set_model, cache_key, moves)
         return moves
