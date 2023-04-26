@@ -1,7 +1,7 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from json import dumps
+from json import JSONDecodeError, dumps, loads
 from typing import Any, Optional
 
 import redis
@@ -28,11 +28,11 @@ class Cache(ABC):
         pass
 
     @abstractmethod
-    def set_model(self, key: str, val: list[Move]) -> list[Any]:
+    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
         pass
 
     @abstractmethod
-    def get_model(self, key: str) -> Optional[dict[Any, Any]]:
+    def get_model(self, key: str) -> Optional[list[Any]]:
         pass
 
 
@@ -64,23 +64,24 @@ class RedisCache(Cache):
         pipe.expire(key, self.expiry)
         return pipe.execute()
 
-    def set_model(self, key: str, val: list[Move]) -> list[Any]:
+    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
         json_vals = dumps(val, default=pydantic_encoder)
-        pipe = self.client.pipeline()
-        pipe.json().set(key, "$", json_vals)
-        pipe.expire(key, self.expiry)
-        return pipe.execute()
+        return self.client.set(key, json_vals, ex=self.expiry)
 
-    def get_model(self, key: str) -> Optional[dict[Any, Any]]:
-        if self.client.type(key) != "ReJSON-RL":  # type: ignore
-            # Potentially invalidate the data here?
+    def get_model(self, key: str) -> Optional[list[Any]]:
+        val = self.client.get(key)
+        if not val:
             return None
-        res = self.client.json().get(key)
-        match res:
-            case dict():
-                return res
-            case _:
-                return None
+        try:
+            json = loads(val)
+            match json:
+                case list():
+                    return json
+                case _:
+                    raise ValueError(f"Value not a list: {json}")
+        except (JSONDecodeError, ValueError) as e:
+            logging.info(f"Invalid json stored: {e}")
+            return None
 
 
 class DictCache(Cache):
@@ -114,17 +115,17 @@ class DictCache(Cache):
         self._data[key] = val
         return val
 
-    def set_model(self, key: str, val: list[Move]) -> list[Any]:
+    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
         json_vals = dumps(val, indent=2, default=pydantic_encoder)
         self._data[key] = json_vals
-        return []
+        return True
 
-    def get_model(self, key: str) -> Optional[dict[Any, Any]]:
+    def get_model(self, key: str) -> Optional[list[Any]]:
         if key not in self._data:
-            return {}
+            return []
         val = self._data[key]
         match val:
-            case dict():
+            case list():
                 return val
             case _:
                 self._data[key] = None
@@ -160,8 +161,8 @@ class FallbackCache(Cache):
     def set_list(self, key: str, val: list[str]) -> list[Any]:
         return self.selected_cache.set_list(key, val)
 
-    def set_model(self, key: str, val: list[Move]) -> list[Any]:
+    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
         return self.selected_cache.set_model(key, val)
 
-    def get_model(self, key: str) -> Optional[dict[Any, Any]]:
+    def get_model(self, key: str) -> Optional[list[Any]]:
         return self.selected_cache.get_model(key)
