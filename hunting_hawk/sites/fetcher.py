@@ -3,13 +3,14 @@ from abc import abstractmethod
 from collections.abc import Mapping
 from dataclasses import fields
 from functools import cached_property
-from typing import Any, Iterator, Optional
 from html import unescape
+from typing import Any, Iterator, Optional
+
 from pydantic.dataclasses import DataclassProxy
 
-from hunting_hawk.mediawiki.cargo import CargoClient, CargoParameters, cargo_export
+from hunting_hawk.mediawiki.cargo import (CargoClient, CargoParameters, File, Move,
+                                          cargo_export, parse_cargo_table)
 from hunting_hawk.mediawiki.filepath import get_file_path
-from hunting_hawk.scrape.scrape import File, Move, parse_cargo_table
 from hunting_hawk.util.normalize import fuzzy_string, reverse_notation
 
 __all__ = ["CargoFetcher", "MoveDataFetcher"]
