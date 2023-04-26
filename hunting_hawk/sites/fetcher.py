@@ -10,7 +10,7 @@ from typing import Any, Iterator, Optional
 from pydantic.dataclasses import DataclassProxy
 
 from hunting_hawk.mediawiki.cargo import (CargoClient, CargoParameters, File, Move,
-                                          cargo_export, parse_cargo_table)
+                                          Wikitext, cargo_export, parse_cargo_table)
 from hunting_hawk.mediawiki.client import ClientApiError, ClientNetworkError
 from hunting_hawk.mediawiki.filepath import get_file_path
 from hunting_hawk.mediawiki.scrape.scrape import \
@@ -70,7 +70,7 @@ class CargoFetcher(MoveDataFetcher):
             case str():
                 return get_file_path(self.client, val)
 
-    def _unescape_html(self, val: list[str] | str) -> list[str] | str:
+    def _unescape_html(self, val: list[Wikitext] | Wikitext) -> list[str] | str:
         match val:
             case list():
                 # TODO: DEFINITELY NUKE THIS
@@ -86,13 +86,24 @@ class CargoFetcher(MoveDataFetcher):
             if f.type == Optional[File] or f.type == Optional[list[File]]
         ]
 
+    def wikitext_fields(self) -> list[str]:
+        return [
+            f.name
+            for f in fields(self.move)
+            if f.type == Optional[Wikitext] or f.type == Optional[list[Wikitext]]
+        ]
+
     def _mutate_fields(self, flds: dict[Any, Any]) -> dict[Any, Any]:
         file_dicts = {
             k: self._convert_url(v) for k, v in flds.items() if k in self.file_fields()
         }
 
-        # wikitext can contain unescaped html entities
-        unescaped_html = {k: self._unescape_html(v) for k, v in flds.items()}
+        unescaped_html = {
+            k: self._convert_url(v)
+            for k, v in flds.items()
+            if k in self.wikitext_fields()
+        }
+
         return flds | unescaped_html | file_dicts
 
     def _list_to_moves(self, moves: list[Any]) -> list[Move]:

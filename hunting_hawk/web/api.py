@@ -11,6 +11,7 @@ from hunting_hawk.sites.dustloop import BBCF, GGACR, HNK, P4U2R
 from hunting_hawk.sites.fetcher import CargoFetcher
 from hunting_hawk.sites.mizuumi import MBTL
 from hunting_hawk.sites.supercombo import SF6
+from hunting_hawk.util import normalize
 
 from .cache import FallbackCache
 
@@ -20,7 +21,6 @@ cache = FallbackCache()
 
 def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
     def wrapped() -> list[str]:
-        # Not sure why it doesnt see the attr
         cache_key = f"{m.table_name}:CHARACTERS:ALL"
         if r := cache.get_list(cache_key):
             return r
@@ -39,6 +39,7 @@ def get_moves(
         character: str, move: Optional[str] = None
     ) -> list[Move] | JSONResponse:
         if move is not None:
+            move = normalize.normalize(move)
             cache_key = f"{m.table_name}:CHARACTERS:{character}:{move}"
             if r := cache.get_model(cache_key):
                 return JSONResponse(content=jsonable_encoder(r))

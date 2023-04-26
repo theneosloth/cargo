@@ -2,7 +2,7 @@ from .numpad import NotationMap
 
 
 def normalize(input: str) -> str:
-    return " ".join(input.strip().upper().split())
+    return "".join(input.strip().upper().split())
 
 
 # TODO: Only works on the first instance of the input
