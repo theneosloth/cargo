@@ -51,7 +51,10 @@ class RedisCache(Cache):
         return self.client.set(key, val, ex=self.expiry)
 
     def get_list(self, key: str) -> list[str]:
-        return [b.decode("utf-8") for b in self.client.lrange(key, 0, -1)]
+        if self.client.type(key) != "list":  # type: ignore
+            # Potentially invalidate the data here?
+            return []
+        return [b for b in self.client.lrange(key, 0, -1)]
 
     def set_list(self, key: str, vals: list[str]) -> list[Any]:
         pipe = self.client.pipeline()
@@ -68,6 +71,9 @@ class RedisCache(Cache):
         return pipe.execute()
 
     def get_model(self, key: str) -> Optional[dict[Any, Any]]:
+        if self.client.type(key) != "ReJSON-RL":  # type: ignore
+            # Potentially invalidate the data here?
+            return None
         res = self.client.json().get(key)
         match res:
             case dict():
@@ -169,5 +175,5 @@ class FallbackCache(Cache):
     def set_model(self, key: str, val: list[Move]) -> list[Any]:
         return self.selected_cache.set_model(key, val)
 
-    def get_model(self, key: str) -> dict[Any, Any]:
+    def get_model(self, key: str) -> Optional[dict[Any, Any]]:
         return self.selected_cache.get_model(key)
