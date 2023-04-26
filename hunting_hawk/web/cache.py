@@ -39,12 +39,14 @@ class Cache(ABC):
 class RedisCache(Cache):
     expiry: int = 60 * 60 * 24 * 7
 
-    def __init__(self, **kwargs: Any) -> None:
-        self.client = redis.StrictRedis(**kwargs)
+    def __init__(self, url: str) -> None:
+        self.client = redis.from_url(url)
 
     def get(self, key: str) -> Optional[str]:
         res = self.client.get(key)
-        return res
+        if res:
+            return res.decode("utf-8")
+        return None
 
     def set(self, key: str, val: str) -> Optional[bool]:
         return self.client.set(key, val, ex=self.expiry)
@@ -53,7 +55,7 @@ class RedisCache(Cache):
         if self.client.type(key) != "list":  # type: ignore
             # Potentially invalidate the data here?
             return []
-        return [b for b in self.client.lrange(key, 0, -1)]
+        return [b.decode("utf-8") for b in self.client.lrange(key, 0, -1)]
 
     def set_list(self, key: str, vals: list[str]) -> list[Any]:
         pipe = self.client.pipeline()
@@ -134,10 +136,8 @@ class FallbackCache(Cache):
 
     def __init__(self) -> None:
         try:
-            host = os.environ.get("REDIS_HOST", "localhost")
-            port = int(os.environ.get("REDIS_PORT", 6379))
-            db = int(os.environ.get("REDIS_DB", 0))
-            self.redis_cache = RedisCache(host=host, port=port, db=db)
+            url = os.environ.get("REDIS_HOST", "redis://localhost:6379")
+            self.redis_cache = RedisCache(url=url)
             if self.redis_cache.client.ping():
                 self.selected_cache = self.redis_cache
             else:
