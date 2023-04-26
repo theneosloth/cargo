@@ -99,7 +99,7 @@ class CargoFetcher(MoveDataFetcher):
         }
 
         unescaped_html = {
-            k: self._convert_url(v)
+            k: self._unescape_html(v)
             for k, v in flds.items()
             if k in self.wikitext_fields()
         }
