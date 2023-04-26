@@ -119,7 +119,7 @@ class DictCache(Cache):
         return []
 
     def get_model(self, key: str) -> Optional[dict[Any, Any]]:
-        if key not in self._data[key]:
+        if key not in self._data:
             return {}
         val = self._data[key]
         match val:
@@ -138,18 +138,7 @@ class FallbackCache(Cache):
             host = os.environ.get("REDIS_HOST", "localhost")
             port = int(os.environ.get("REDIS_PORT", 6379))
             db = int(os.environ.get("REDIS_DB", 0))
-            if host == "localhost":
-                params = {"host": host, "port": port, "db": db}
-            else:
-                url = urlparse(host)
-                params = {
-                    "host": url.hostname,
-                    "username": url.username,
-                    "password": url.password,
-                    "port": port,
-                    "db": db,
-                }
-            self.redis_cache = RedisCache(**params)
+            self.redis_cache = RedisCache(host=host, port=port, db=db)
             if self.redis_cache.client.ping():
                 self.selected_cache = self.redis_cache
             else:
