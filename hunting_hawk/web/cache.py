@@ -3,7 +3,6 @@ import os
 from abc import ABC, abstractmethod
 from json import dumps
 from typing import Any, Optional
-from urllib.parse import urlparse
 
 import redis
 from pydantic.json import pydantic_encoder
