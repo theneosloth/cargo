@@ -6,9 +6,9 @@ from .cache import RedisCache as CargoCache
 
 
 # TODO: definitely not the right place for this
-def get_requests_session(cache_name: str) -> CachedSession:
-    if CargoCache().client is not None:
+def get_requests_session() -> CachedSession:
+    try:
         backend = RedisCache(connection=CargoCache().client)
-        return CachedSession(cache_name, backend=backend, expire_after=60 * 60 * 24)
-    else:
-        return CachedSession(cache_name, use_temp=True)
+        return CachedSession(backend=backend, expire_after=60 * 60 * 24)
+    except AttributeError:
+        return CachedSession(use_temp=True)

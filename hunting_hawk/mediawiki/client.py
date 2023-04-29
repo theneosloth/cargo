@@ -92,7 +92,7 @@ def cached_get(
 ) -> list[str] | dict[Any, Any]:
     """Get a json from a given URL. Caches the response"""
     try:
-        session = get_requests_session(f"http:{client.domain}")
+        session = get_requests_session()
         res = session.get(path, headers=client.headers, params=params).json()
     except requests.exceptions.JSONDecodeError as e:
         raise ClientDecodeError from e

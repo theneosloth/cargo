@@ -42,7 +42,7 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
     table_url = f"{tables_endpoint}/{table_name}"
     logging.info(f"Attempting to scrape {table_url}")
     try:
-        session = get_requests_session(f"http:{table_name}")
+        session = get_requests_session()
         req = session.get(table_url, headers=cargo.headers, timeout=cargo.timeout)
     except requests.exceptions.HTTPError as e:
         raise CargoNetworkError from e
