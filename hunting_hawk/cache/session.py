@@ -1,6 +1,8 @@
-from requests_cache import CachedSession, RedisCache
+from requests_cache import CachedSession, RedisCache  # type: Ignore
 
 from .cache import RedisCache as CargoCache
+
+# Fails to import RedisCache, but it is there
 
 
 # TODO: definitely not the right place for this
