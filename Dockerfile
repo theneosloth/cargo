@@ -1,1 +1,0 @@
-FROM neosloth/huntinghawk:latest

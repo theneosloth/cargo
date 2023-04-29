@@ -43,12 +43,14 @@ class CargoFetcher(MoveDataFetcher):
     """Fetcher more specific to Fighting game wikis."""
 
     client: CargoClient
+    cache: FallbackCache
     table_name: str
 
     def __init__(self, cargo: CargoClient, table_name: str) -> None:
         """Init a cargo object and fetch move definition."""
         self.client = cargo
         self.table_name = table_name
+        self.cache = FallbackCache()
         self.default_key = "chara"
 
     @cached_property

@@ -1,9 +1,13 @@
-from .normalize import fuzzy_string, normalize, reverse_notation
+from .normalize import fuzzy_string, normalize, normalize_name, reverse_notation
 
 
 def test_normalize() -> None:
     assert normalize("236    P") == "236P"
     assert normalize("214lk") == "214LK"
+
+
+def test_normalize_name() -> None:
+    assert normalize_name("Ángel") == "Angel"
 
 
 def test_reverse_notaiton() -> None:
