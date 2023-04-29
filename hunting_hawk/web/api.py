@@ -4,23 +4,24 @@ from typing import Callable, List, Optional
 from fastapi import BackgroundTasks, FastAPI
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from pydantic.json import pydantic_encoder
 
+from hunting_hawk.cache.cache import FallbackCache
 from hunting_hawk.mediawiki.cargo import Move
 from hunting_hawk.sites.dreamcancel import KOFXV
 from hunting_hawk.sites.dustloop import BBCF, GGACR, HNK, P4U2R
 from hunting_hawk.sites.fetcher import CargoFetcher
 from hunting_hawk.sites.mizuumi import MBTL
 from hunting_hawk.sites.supercombo import SF6
-
-from .cache import FallbackCache
+from hunting_hawk.util import normalize
 
 app = FastAPI()
 cache = FallbackCache()
+cache.connect()
 
 
 def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
     def wrapped() -> list[str]:
-        # Not sure why it doesnt see the attr
         cache_key = f"{m.table_name}:CHARACTERS:ALL"
         if r := cache.get_list(cache_key):
             return r
@@ -39,16 +40,17 @@ def get_moves(
         character: str, move: Optional[str] = None
     ) -> list[Move] | JSONResponse:
         if move is not None:
+            move = normalize.normalize(move)
             cache_key = f"{m.table_name}:CHARACTERS:{character}:{move}"
-            if r := cache.get_model(cache_key):
+            if r := cache.get_json(cache_key):
                 return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves_by_input(character, move)
         else:
             cache_key = f"{m.table_name}:CHARACTERS:{character}:ALL"
-            if r := cache.get_model(cache_key):
+            if r := cache.get_json(cache_key):
                 return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves(character)
-        tasks.add_task(cache.set_model, cache_key, moves)
+        tasks.add_task(cache.set_json, cache_key, moves, pydantic_encoder)
         return moves
 
     return wrapped

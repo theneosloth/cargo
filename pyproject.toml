@@ -12,6 +12,7 @@ fastapi = "^0.88.0"
 uvicorn = {extras = ["standard"], version = "^0.21.1"}
 redis = "^4.5.4"
 lxml = "^4.9.2"
+requests-cache = "^1.0.1"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.940"
@@ -26,6 +27,7 @@ pylsp-mypy = "^0.5.8"
 types-beautifulsoup4 = "^4.11.1"
 ruff = "^0.0.262"
 lxml-stubs = "^0.4.0"
+ipython = "^8.13.0"
 
 [tool.poetry.scripts]
 api = "hunting_hawk.web.start:start"

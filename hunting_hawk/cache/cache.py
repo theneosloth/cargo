@@ -2,15 +2,16 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from json import JSONDecodeError, dumps, loads
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import redis
-from pydantic.json import pydantic_encoder
-
-from hunting_hawk.mediawiki.cargo import Move
 
 
 class Cache(ABC):
+    @abstractmethod
+    def connect(self) -> None:
+        pass
+
     @abstractmethod
     def get(self, key: str) -> Optional[str]:
         pass
@@ -28,18 +29,26 @@ class Cache(ABC):
         pass
 
     @abstractmethod
-    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
+    def set_json(
+        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
+    ) -> Optional[bool]:
         pass
 
     @abstractmethod
-    def get_model(self, key: str) -> Optional[list[Any]]:
+    def get_json(self, key: str) -> Optional[list[Any]]:
         pass
 
 
 class RedisCache(Cache):
     expiry: int = 60 * 60 * 24 * 7
+    _shared_state: dict[Any, Any] = {}
 
-    def __init__(self, url: str) -> None:
+    # Red alert: Borg pattern
+    def __init__(self) -> None:
+        self.__dict__ = self._shared_state
+
+    def connect(self) -> None:
+        url = os.environ.get("REDIS_HOST", "redis://localhost:6379")
         self.client = redis.from_url(url)
 
     def get(self, key: str) -> Optional[str]:
@@ -64,17 +73,21 @@ class RedisCache(Cache):
         pipe.expire(key, self.expiry)
         return pipe.execute()
 
-    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
-        json_vals = dumps(val, default=pydantic_encoder)
+    def set_json(
+        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
+    ) -> Optional[bool]:
+        json_vals = dumps(val, default=encoder)
         return self.client.set(key, json_vals, ex=self.expiry)
 
-    def get_model(self, key: str) -> Optional[list[Any]]:
+    def get_json(self, key: str) -> Any:
         val = self.client.get(key)
         if not val:
             return None
         try:
             json = loads(val)
             match json:
+                case dict():
+                    return json
                 case list():
                     return json
                 case _:
@@ -86,6 +99,9 @@ class RedisCache(Cache):
 
 class DictCache(Cache):
     _data: dict[str, Any] = {}
+
+    def connect(self) -> None:
+        return None
 
     def get(self, key: str) -> Optional[str]:
         if key not in self._data:
@@ -115,12 +131,14 @@ class DictCache(Cache):
         self._data[key] = val
         return val
 
-    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
-        json_vals = dumps(val, indent=2, default=pydantic_encoder)
+    def set_json(
+        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
+    ) -> Optional[bool]:
+        json_vals = dumps(val, indent=2, default=encoder)
         self._data[key] = json_vals
         return True
 
-    def get_model(self, key: str) -> Optional[list[Any]]:
+    def get_json(self, key: str) -> Optional[list[Any]]:
         if key not in self._data:
             return []
         val = self._data[key]
@@ -137,17 +155,15 @@ class FallbackCache(Cache):
 
     def __init__(self) -> None:
         try:
-            url = os.environ.get("REDIS_HOST", "redis://localhost:6379")
-            self.redis_cache = RedisCache(url=url)
-            if self.redis_cache.client.ping():
-                self.selected_cache = self.redis_cache
-            else:
-                raise ValueError("Redis ping failed")
+            self.selected_cache = RedisCache()
         except (ValueError, redis.exceptions.ConnectionError) as e:
             logging.warning(
                 f"Unable to connect to Redis, falling back to an in memory dict: {e}"
             )
             self.selected_cache = DictCache()
+
+    def connect(self) -> None:
+        return self.selected_cache.connect()
 
     def get(self, key: str) -> Optional[str]:
         return self.selected_cache.get(key)
@@ -161,8 +177,10 @@ class FallbackCache(Cache):
     def set_list(self, key: str, val: list[str]) -> list[Any]:
         return self.selected_cache.set_list(key, val)
 
-    def set_model(self, key: str, val: list[Move]) -> Optional[bool]:
-        return self.selected_cache.set_model(key, val)
+    def set_json(
+        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
+    ) -> Optional[bool]:
+        return self.selected_cache.set_json(key, val, encoder)
 
-    def get_model(self, key: str) -> Optional[list[Any]]:
-        return self.selected_cache.get_model(key)
+    def get_json(self, key: str) -> Optional[list[Any]]:
+        return self.selected_cache.get_json(key)

@@ -5,6 +5,8 @@ from typing import Any
 
 import requests
 
+from hunting_hawk.cache.session import get_requests_session
+
 from .__version__ import VERSION
 
 
@@ -69,9 +71,29 @@ def raw_get(client: Client, path: str, params: dict[str, Any]) -> requests.Respo
 def get(
     client: Client, path: str, params: dict[str, Any]
 ) -> list[str] | dict[Any, Any]:
-    """Call a given URL. Caches the response"""
+    """Get a json from a given URL."""
     try:
         res = raw_get(client, path, params).json()
+    except requests.exceptions.JSONDecodeError as e:
+        raise ClientDecodeError from e
+
+    match res:
+        case {"error": err}:
+            raise ClientApiError(err)
+        case list() | dict():
+            return res
+        case _:
+            raise TypeError("Unknown return type")
+
+
+# TODO: Deduplicate
+def cached_get(
+    client: Client, path: str, params: dict[str, Any]
+) -> list[str] | dict[Any, Any]:
+    """Get a json from a given URL. Caches the response"""
+    try:
+        session = get_requests_session(f"http:{client.domain}")
+        res = session.get(path, headers=client.headers, params=params).json()
     except requests.exceptions.JSONDecodeError as e:
         raise ClientDecodeError from e
 
