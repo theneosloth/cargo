@@ -1,4 +1,4 @@
-from requests_cache import CachedSession, RedisCache  # type: Ignore
+from requests_cache import CachedSession, RedisCache  # type: ignore
 
 from .cache import RedisCache as CargoCache
 
