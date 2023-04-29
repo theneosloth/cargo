@@ -6,7 +6,7 @@ from pydantic import BaseModel, ValidationError
 from pydantic.dataclasses import DataclassProxy
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 
-from .client import Client, ClientError, get
+from .client import Client, ClientError, cached_get, get
 
 DEFAULT_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 DEFAULT_TABLES_PATH = "Special:CargoTables"
@@ -162,7 +162,7 @@ class CargoParseError(CargoError):
 def parse_cargo_table(client: Client, table_name: str) -> DataclassProxy:
     """Dynamically construct a type for a cargo table with TABLE_NAME."""
     params = CargoFieldsParams(table=table_name).__dict__
-    res = get(client, client.api_endpoint(), params)
+    res = cached_get(client, client.api_endpoint(), params)
     try:
         c = CargoFields.parse_obj(res)
     except ValidationError as e:

@@ -5,7 +5,6 @@ from json import JSONDecodeError, dumps, loads
 from typing import Any, Callable, Optional
 
 import redis
-from pydantic.json import pydantic_encoder
 
 
 class Cache(ABC):
@@ -47,7 +46,6 @@ class RedisCache(Cache):
     # Red alert: Borg pattern
     def __init__(self) -> None:
         self.__dict__ = self._shared_state
-        print(self.__dict__)
 
     def connect(self) -> None:
         url = os.environ.get("REDIS_HOST", "redis://localhost:6379")

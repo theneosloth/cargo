@@ -8,6 +8,7 @@ import requests
 from lxml import etree
 from pydantic.dataclasses import DataclassProxy, dataclass
 
+from hunting_hawk.cache.session import get_requests_session
 from hunting_hawk.mediawiki.cargo import (CargoClient, CargoNetworkError,
                                           CargoParseError, File, Wikitext)
 
@@ -41,7 +42,8 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
     table_url = f"{tables_endpoint}/{table_name}"
     logging.info(f"Attempting to scrape {table_url}")
     try:
-        req = requests.get(table_url, headers=cargo.headers, timeout=cargo.timeout)
+        session = get_requests_session(f"http:{table_name}")
+        req = session.get(table_url, headers=cargo.headers, timeout=cargo.timeout)
     except requests.exceptions.HTTPError as e:
         raise CargoNetworkError from e
     except requests.exceptions.ReadTimeout as e:

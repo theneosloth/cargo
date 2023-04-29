@@ -11,7 +11,7 @@ from pydantic.dataclasses import DataclassProxy
 
 from hunting_hawk.mediawiki.cargo import (CargoClient, CargoParameters, File, Move,
                                           Wikitext, cargo_export, parse_cargo_table)
-from hunting_hawk.mediawiki.client import ClientApiError, ClientNetworkError
+from hunting_hawk.mediawiki.client import ClientError
 from hunting_hawk.mediawiki.filepath import get_file_path
 from hunting_hawk.mediawiki.scrape.scrape import \
     parse_cargo_table as fallback_parse_table
@@ -43,14 +43,12 @@ class CargoFetcher(MoveDataFetcher):
     """Fetcher more specific to Fighting game wikis."""
 
     client: CargoClient
-    cache: FallbackCache
     table_name: str
 
     def __init__(self, cargo: CargoClient, table_name: str) -> None:
         """Init a cargo object and fetch move definition."""
         self.client = cargo
         self.table_name = table_name
-        self.cache = FallbackCache()
         self.default_key = "chara"
 
     @cached_property
@@ -58,7 +56,7 @@ class CargoFetcher(MoveDataFetcher):
         """Lazy load the cargo table definition."""
         try:
             return parse_cargo_table(self.client, self.table_name)
-        except (ClientApiError, ClientNetworkError) as e:
+        except ClientError as e:
             logging.info(
                 f"Table parse failed with:{e} . Falling back to an HTML parser."
             )
