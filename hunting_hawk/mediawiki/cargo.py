@@ -10,7 +10,7 @@ from .client import Client, ClientError, cached_get, get
 
 DEFAULT_TABLE_EXPORT_PATH = "?title=Special:CargoExport"
 DEFAULT_TABLES_PATH = "Special:CargoTables"
-DEFAULT_PARAMS_LIMIT = 500
+DEFAULT_PARAMS_LIMIT = 200
 
 cargo_query = str | List[str]
 Move = NewType("Move", type)
@@ -134,7 +134,7 @@ class CargoClient(Client):
 
     table_export_path: str
     tables_path: str
-    limit: int = 500
+    limit: int = 200
 
     def export_endpoint(self) -> str:
         """Construct a cargo export endpoint for a given mediawiki site."""

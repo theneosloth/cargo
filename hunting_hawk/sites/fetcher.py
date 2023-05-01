@@ -130,14 +130,10 @@ class CargoFetcher(MoveDataFetcher):
 
         return res
 
-    def _get(self, params: CargoParameters, retrieve_images: bool) -> list[Move]:
+    def _get(self, params: CargoParameters) -> list[Move]:
         """Wrap around cargo_export."""
 
-        file_fields = self.file_fields()
-        field_param = [f.name for f in fields(self.move) if f.name not in file_fields]
-
-        if retrieve_images:
-            field_param = field_param + file_fields
+        field_param = [f.name for f in fields(self.move)]
 
         merged_params: CargoParameters = {
             "fields": ",".join(field_param),
@@ -150,14 +146,14 @@ class CargoFetcher(MoveDataFetcher):
         """Return the movelist for a character CHARA."""
 
         params: CargoParameters = {"where": f"chara='{char}'"}
-        return self._get(params, True)
+        return self._get(params)
 
     def get_moves_by_input(self, char: str, input: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
         exact_params: CargoParameters = {
             "where": f'{self.default_key}="{char}" AND input="{input}"',
         }
-        result = self._get(exact_params, True)
+        result = self._get(exact_params)
         if result:
             return result
 
@@ -170,10 +166,10 @@ class CargoFetcher(MoveDataFetcher):
             )
         }
 
-        return self._get(fuzzy_params, True)
+        return self._get(fuzzy_params)
 
     def query(self, char: str, query: CargoParameters) -> list[Move]:
-        return self._get(query, True)
+        return self._get(query)
 
     def __getitem__(self, char: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
