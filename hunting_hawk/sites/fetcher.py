@@ -2,6 +2,7 @@
 import logging
 from abc import abstractmethod
 from collections.abc import Mapping
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import fields
 from functools import cached_property
 from html import unescape
@@ -54,6 +55,7 @@ class CargoFetcher(MoveDataFetcher):
     @cached_property
     def move(self) -> DataclassProxy:
         """Lazy load the cargo table definition."""
+        logging.info(f"Retrieving table definition for {self.table_name}")
         try:
             return parse_cargo_table(self.client, self.table_name)
         except ClientError as e:
@@ -106,18 +108,18 @@ class CargoFetcher(MoveDataFetcher):
 
         return flds | unescaped_html | file_dicts
 
+    def fill_move(self, move: dict[Any, Any]) -> Any:
+        flds = fields(self.move)
+        blank_fields = {t.name: None for t in flds}
+        filled_move = blank_fields | self._mutate_fields(move)
+        return self.move(**filled_move)
+
     def _list_to_moves(self, moves: list[Any]) -> list[Move]:
         """Copy all keys from res to Character."""
-        res = []
-        flds = fields(self.move)
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            res = executor.map(self.fill_move, moves)
 
-        blank_fields = {t.name: None for t in flds}
-        for m in moves:
-            filled_move = blank_fields | self._mutate_fields(m)
-            move = self.move(**filled_move)
-            res.append(move)
-
-        return res
+        return list(res)
 
     def _get(self, params: CargoParameters, retrieve_images: bool) -> list[Move]:
         """Wrap around cargo_export."""
@@ -139,7 +141,7 @@ class CargoFetcher(MoveDataFetcher):
         """Return the movelist for a character CHARA."""
 
         params: CargoParameters = {"where": f"chara='{char}'"}
-        return self._get(params, False)
+        return self._get(params, True)
 
     def get_moves_by_input(self, char: str, input: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
