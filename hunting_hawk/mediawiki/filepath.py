@@ -12,6 +12,7 @@ def get_file_path(client: Client, file: ImageName) -> str:
         res = requests.get(
             url, allow_redirects=True, headers=client.headers, stream=True
         )
+        res.raise_for_status()
         res.close()
         url = res.url
         return url

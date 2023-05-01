@@ -49,7 +49,7 @@ class RedisCache(Cache):
 
     def connect(self) -> None:
         url = os.environ.get("REDIS_HOST", "redis://localhost:6379")
-        self.client = redis.from_url(url)
+        self.client = redis.from_url(url, socket_connect_timeout=2)
 
     def get(self, key: str) -> Optional[str]:
         res = self.client.get(key)
@@ -156,7 +156,7 @@ class FallbackCache(Cache):
             self.selected_cache = RedisCache()
             self.connect()
             self.selected_cache.client.ping()
-        except (ValueError, redis.exceptions.ConnectionError) as e:
+        except (ValueError, redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
             logging.info(
                 f"Unable to connect to Redis, falling back to an in memory dict: {e}"
             )
