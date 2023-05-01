@@ -2,7 +2,7 @@
 import logging
 from abc import abstractmethod
 from collections.abc import Mapping
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import fields
 from functools import cached_property
 from html import unescape
@@ -116,10 +116,19 @@ class CargoFetcher(MoveDataFetcher):
 
     def _list_to_moves(self, moves: list[Any]) -> list[Move]:
         """Copy all keys from res to Character."""
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            res = executor.map(self.fill_move, moves)
 
-        return list(res)
+        res = []
+        with ThreadPoolExecutor() as executor:
+            futures = (executor.submit(self.fill_move, move) for move in moves)
+            done = as_completed(futures)
+            for future in done:
+                try:
+                    mv = future.result()
+                    res.append(mv)
+                except Exception as e:
+                    logging.warning(f"Move retrieval failed with {e}. Skipping move")
+
+        return res
 
     def _get(self, params: CargoParameters, retrieve_images: bool) -> list[Move]:
         """Wrap around cargo_export."""
