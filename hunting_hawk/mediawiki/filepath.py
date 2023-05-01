@@ -16,4 +16,4 @@ def get_file_path(client: Client, file: ImageName) -> str:
         url = res.url
         return url
     except requests.exceptions.HTTPError as e:
-        raise ClientError from e
+        return file

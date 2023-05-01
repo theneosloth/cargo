@@ -19,11 +19,6 @@
                         ruff = super.ruff.override {
                             preferWheel = true;
                         };
-                        lxml-stubs = super.lxml-stubs.overridePythonAttrs (
-                            old: {
-                                buildInputs = (old.buildInputs or [ ]) ++ [ super.setuptools ];
-                            }
-                        );
                     });
             in
               {
@@ -44,7 +39,6 @@
                   devShells.default = pkgs.mkShell {
                       packages = [
                           pkgs.redis
-                          pkgs.flyctl
                           (mkPoetryEnv{
                               projectDir = self;
                               overrides = overrides;

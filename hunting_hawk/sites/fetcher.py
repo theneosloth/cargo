@@ -85,7 +85,7 @@ class CargoFetcher(MoveDataFetcher):
         return [
             f.name
             for f in fields(self.move)
-            if f.type == Optional[File] or f.type == Optional[list[File]]
+            if f.type == Optional[File] or f.type == Optional[list[File]] or f.name in ("images", "hitboxes") # Some wikis do not annotate the images as hitboxes
         ]
 
     def wikitext_fields(self) -> list[str]:
