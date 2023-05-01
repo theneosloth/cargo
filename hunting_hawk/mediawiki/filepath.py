@@ -7,7 +7,7 @@ ImageName = str
 def get_file_path(client: Client, file: ImageName) -> str:
     if not file:
         return ""
-    return url = f"{client.index_endpoint()}/Special:FilePath/{file}"
+    return f"{client.index_endpoint()}/Special:FilePath/{file}"
     # TODO: Cache can be populated with:
     # try:
     #     res = requests.get(

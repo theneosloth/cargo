@@ -77,7 +77,7 @@ class CargoFetcher(MoveDataFetcher):
             case list():
                 # TODO: DEFINITELY NUKE THIS
                 # Wiki returns &amp for incomplete codes
-                return [unescape(unescape(link)) for link in val]
+                return [unescape(unescape(link)) for link in val if unescape(unescape(link)).strip()]
             case str():
                 return unescape(val)
 
