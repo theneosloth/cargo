@@ -21,4 +21,4 @@ cargo = CargoClient(
 __all__ = ["SF6"]
 
 SF6 = CargoFetcher(cargo, "SF6_FrameData")
-# SCVI = CargoFetcher(cargo, "SCVIFrameData")
+SCVI = CargoFetcher(cargo, "SCVIFrameData")

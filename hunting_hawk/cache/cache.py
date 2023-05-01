@@ -61,10 +61,8 @@ class RedisCache(Cache):
         return self.client.set(key, val, ex=self.expiry)
 
     def get_list(self, key: str) -> list[str]:
-        if self.client.type(key) != "list":  # type: ignore
-            # Potentially invalidate the data here?
-            return []
-        return [b.decode("utf-8") for b in self.client.lrange(key, 0, -1)]
+        r = [b.decode("utf-8") for b in self.client.lrange(key, 0, -1)]
+        return r
 
     def set_list(self, key: str, vals: list[str]) -> list[Any]:
         pipe = self.client.pipeline()
@@ -156,8 +154,10 @@ class FallbackCache(Cache):
     def __init__(self) -> None:
         try:
             self.selected_cache = RedisCache()
+            self.connect()
+            self.selected_cache.client.ping()
         except (ValueError, redis.exceptions.ConnectionError) as e:
-            logging.warning(
+            logging.info(
                 f"Unable to connect to Redis, falling back to an in memory dict: {e}"
             )
             self.selected_cache = DictCache()
