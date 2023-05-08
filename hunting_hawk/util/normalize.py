@@ -4,12 +4,11 @@ from .numpad import NotationMap
 
 
 def normalize(input: str) -> str:
-    return "".join(input.strip().upper().split())
+    return "".join(input.strip().lower().split())
 
 
 def normalize_name(name: str) -> str:
-    ascii_name = unicodedata.normalize("NFKD", name)
-    return "_".join(ascii_name.split())
+    return "_".join(normalize(name).split())
 
 
 # TODO: Only works on the first instance of the input

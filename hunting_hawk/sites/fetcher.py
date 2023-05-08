@@ -64,8 +64,8 @@ class CargoFetcher(MoveDataFetcher):
             )
             return fallback_parse_table(self.client, self.table_name)
 
-    # TODO: Use type annotations
     def _convert_url(self, val: list[str] | str) -> list[str] | str:
+        """Get the URL for an image from the image name."""
         match val:
             case list():
                 return [get_file_path(self.client, f) for f in val]
@@ -73,6 +73,7 @@ class CargoFetcher(MoveDataFetcher):
                 return get_file_path(self.client, val)
 
     def _unescape_html(self, val: list[Wikitext] | Wikitext) -> list[str] | str:
+        """Decode HTML Character escapes for all Wikitext entries"""
         match val:
             case list():
                 # TODO: DEFINITELY NUKE THIS
@@ -82,6 +83,7 @@ class CargoFetcher(MoveDataFetcher):
                 return unescape(val)
 
     def file_fields(self) -> list[str]:
+        """Fields that are known to be image links."""
         return [
             f.name
             for f in fields(self.move)
@@ -89,6 +91,7 @@ class CargoFetcher(MoveDataFetcher):
         ]
 
     def wikitext_fields(self) -> list[str]:
+        """Fields that are known to be wikitext fields."""
         return [
             f.name
             for f in fields(self.move)
@@ -96,6 +99,7 @@ class CargoFetcher(MoveDataFetcher):
         ]
 
     def _mutate_fields(self, flds: dict[Any, Any]) -> dict[Any, Any]:
+        """All conversions done to fields."""
         file_dicts = {
             k: self._convert_url(v) for k, v in flds.items() if k in self.file_fields()
         }
@@ -109,6 +113,7 @@ class CargoFetcher(MoveDataFetcher):
         return flds | unescaped_html | file_dicts
 
     def fill_move(self, move: dict[Any, Any]) -> Any:
+        """Convert a JSON response to a typed Move."""
         flds = fields(self.move)
         blank_fields = {t.name: None for t in flds}
         filled_move = blank_fields | self._mutate_fields(move)
@@ -117,18 +122,7 @@ class CargoFetcher(MoveDataFetcher):
     def _list_to_moves(self, moves: list[Any]) -> list[Move]:
         """Copy all keys from res to Character."""
 
-        res = []
-        with ThreadPoolExecutor() as executor:
-            futures = (executor.submit(self.fill_move, move) for move in moves)
-            done = as_completed(futures)
-            for future in done:
-                try:
-                    mv = future.result()
-                    res.append(mv)
-                except Exception as e:
-                    logging.warning(f"Move retrieval failed with {e}. Skipping move")
-
-        return res
+        return [self.fill_move(move) for move in moves]
 
     def _get(self, params: CargoParameters) -> list[Move]:
         """Wrap around cargo_export."""
