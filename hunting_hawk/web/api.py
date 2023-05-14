@@ -1,11 +1,9 @@
 """REST web service for retreiving frame data"""
-from contextlib import asynccontextmanager
 from typing import Annotated, Callable, List, Optional
-from redis import asyncio as aioredis
+
 from fastapi import BackgroundTasks, FastAPI, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from pydantic.json import pydantic_encoder
 
 from hunting_hawk.cache.cache import FallbackCache
 from hunting_hawk.mediawiki.cargo import Move
@@ -16,24 +14,13 @@ from hunting_hawk.sites.mizuumi import MBTL
 from hunting_hawk.sites.supercombo import SCVI, SF6
 from hunting_hawk.util import normalize
 
-async def initialize_index():
-    try:
-        await aioredis.execute_command()
-    except Exception as e:
-        raise e
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    cache = FallbackCache()
-    yield
+app = FastAPI()
+cache = FallbackCache()
 
 
-app = FastAPI(lifespan=lifespan)
-
-
-async def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
-    async def wrapped() -> list[str]:
-        cache_key = f"characterlist:{m.table_name}".lower()
+def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
+    def wrapped() -> list[str]:
+        cache_key = f"{m.table_name}:all".lower()
 
         if r := cache.get_list(cache_key):
             return r
@@ -45,25 +32,27 @@ async def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[]
     return wrapped
 
 
-async def get_moves(
+def get_moves(
     m: CargoFetcher, tasks: BackgroundTasks
 ) -> Callable[[str, Optional[str]], list[Move] | JSONResponse]:
-    async def wrapped(
-        character: str, move: Annotated[str | None, Query(max_length=10)] = None
+    def wrapped(
+        character: str, move: Annotated[str | None, Query(max_length=20)] = None
     ) -> list[Move] | JSONResponse:
         if move is not None:
             move = normalize.normalize(move)
-            character = normalize.normalize(character)
-            cache_key = f"movedata:{m.table_name}:{character}:{move}".lower()
+            cache_key = f"{m.table_name}:{character}:{move}".lower()
             if r := cache.get_json(cache_key):
                 return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves_by_input(character, move)
         else:
-            cache_key = f"movedata:{m.table_name}:{character}:all".lower()
+            cache_key = f"{m.table_name}:{character}:all".lower()
             if r := cache.get_json(cache_key):
                 return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves(character)
-        tasks.add_task(cache.set_json, cache_key, moves, pydantic_encoder)
+
+        if moves:
+            tasks.add_task(cache.set_json, cache_key, moves, jsonable_encoder)
+
         return moves
 
     return wrapped
@@ -106,7 +95,9 @@ async def hnk_list_characters(background_tasks: BackgroundTasks) -> List[str]:
 async def hnk_find_move(
     character: str, move: Annotated[str | None, Query(max_length=10)] = None
 ) -> list[Move] | JSONResponse:
-    return get_moves(HNK, background_tasks)(character, move)
+    if move is not None:
+        return HNK.get_moves_by_input(character, move)
+    return HNK.get_moves(character)
 
 
 @app.get("/GGACR/characters/", response_model=List[str])
@@ -139,17 +130,16 @@ async def mbtl_find_move(
 
 @app.get("/SCVI/characters/", response_model=List[str])
 async def scvi_get_characters(background_tasks: BackgroundTasks) -> List[str]:
-    """Incomplete. Inputs are stored as image file names."""
     return get_characters(SCVI, background_tasks)()
 
 
 @app.get("/SCVI/characters/{character}/", response_model=List[SCVI.move])  # type: ignore
 async def scvi_get_move(
     background_tasks: BackgroundTasks,
-    character: str
+    character: str,
+    move: Annotated[str | None, Query(max_length=10)] = None,
 ) -> list[Move] | JSONResponse:
-    """Incomplete. Only supports retrieving all of character's moves."""
-    return get_moves(SCVI, background_tasks)(character, None)
+    return get_moves(SCVI, background_tasks)(character, move)
 
 
 @app.get("/SF6/characters/", response_model=List[str])

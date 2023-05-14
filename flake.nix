@@ -19,6 +19,11 @@
                         ruff = super.ruff.override {
                             preferWheel = true;
                         };
+                        wikitextparser = super.wikitextparser.overridePythonAttrs(
+                            old: {
+                                buildInputs = (old.buildInputs or [ ]) ++ [ super.setuptools ];
+                            }
+                        );
                     });
             in
               {

@@ -1,4 +1,3 @@
-import unicodedata
 
 from .numpad import NotationMap
 

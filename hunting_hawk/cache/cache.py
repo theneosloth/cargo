@@ -1,10 +1,11 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from json import JSONDecodeError, dumps, loads
+from json import dumps
 from typing import Any, Callable, Optional
 
 import redis
+from redis.commands.json.path import Path
 
 
 class Cache(ABC):
@@ -30,12 +31,18 @@ class Cache(ABC):
 
     @abstractmethod
     def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
+        self, key: str, val: Any, encoder: Callable[[Any], Any]
     ) -> Optional[bool]:
         pass
 
     @abstractmethod
-    def get_json(self, key: str) -> Optional[list[Any]]:
+    def append_json(
+        self, key: str, val: Any, path: Any, encoder: Callable[[Any], Any]
+    ) -> Optional[bool]:
+        pass
+
+    @abstractmethod
+    def get_json(self, key: str) -> Optional[dict[Any, Any] | list[Any]]:
         pass
 
 
@@ -72,27 +79,34 @@ class RedisCache(Cache):
         return pipe.execute()
 
     def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
+        self, key: str, val: Any, encoder: Callable[[Any], Any]
     ) -> Optional[bool]:
-        json_vals = dumps(val, default=encoder)
-        return self.client.set(key, json_vals, ex=self.expiry)
+        pipe = self.client.pipeline()
+        pipe.json().set(key, Path.root_path(), encoder(val))
+        pipe.expire(key, self.expiry)
+        if pipe.execute():
+            return True
+        return False
 
-    def get_json(self, key: str) -> Any:
-        val = self.client.get(key)
-        if not val:
-            return None
-        try:
-            json = loads(val)
-            match json:
-                case dict():
-                    return json
-                case list():
-                    return json
-                case _:
-                    raise ValueError(f"Value not a list: {json}")
-        except (JSONDecodeError, ValueError) as e:
-            logging.info(f"Invalid json stored: {e}")
-            return None
+    def append_json(
+        self, key: str, val: Any, path: Any, encoder: Callable[[Any], Any]
+    ) -> Optional[bool]:
+        pipe = self.client.pipeline()
+        pipe.json().set(key, Path.root_path(), encoder(val))
+        pipe.expire(key, self.expiry)
+        if pipe.execute():
+            return True
+        return False
+
+    def get_json(self, key: str) -> Optional[dict[Any, Any] | list[Any]]:
+        val = self.client.json().get(key)
+        match val:
+            case dict():
+                return val
+            case list():
+                return val
+            case _:
+                return None
 
 
 class DictCache(Cache):
@@ -130,18 +144,27 @@ class DictCache(Cache):
         return val
 
     def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
+        self, key: str, val: Any, encoder: Callable[[Any], Any]
     ) -> Optional[bool]:
         json_vals = dumps(val, indent=2, default=encoder)
         self._data[key] = json_vals
         return True
 
-    def get_json(self, key: str) -> Optional[list[Any]]:
+    def append_json(
+        self, key: str, val: Any, path: Any, encoder: Callable[[Any], Any]
+    ) -> Optional[bool]:
+        json_vals = dumps(val, indent=2, default=encoder)
+        self._data[key] = json_vals
+        return True
+
+    def get_json(self, key: str) -> Optional[dict[Any, Any] | list[Any]]:
         if key not in self._data:
             return []
         val = self._data[key]
         match val:
             case list():
+                return val
+            case dict():
                 return val
             case _:
                 self._data[key] = None
@@ -156,7 +179,11 @@ class FallbackCache(Cache):
             self.selected_cache = RedisCache()
             self.connect()
             self.selected_cache.client.ping()
-        except (ValueError, redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
+        except (
+            ValueError,
+            redis.exceptions.ConnectionError,
+            redis.exceptions.TimeoutError,
+        ) as e:
             logging.info(
                 f"Unable to connect to Redis, falling back to an in memory dict: {e}"
             )
@@ -178,9 +205,14 @@ class FallbackCache(Cache):
         return self.selected_cache.set_list(key, val)
 
     def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
+        self, key: str, val: Any, encoder: Callable[[Any], Any]
     ) -> Optional[bool]:
         return self.selected_cache.set_json(key, val, encoder)
 
-    def get_json(self, key: str) -> Optional[list[Any]]:
+    def append_json(
+        self, key: str, val: Any, path: Any, encoder: Callable[[Any], Any]
+    ) -> Optional[bool]:
+        return self.selected_cache.append_json(key, val, path, encoder)
+
+    def get_json(self, key: str) -> Optional[dict[Any, Any] | list[Any]]:
         return self.selected_cache.get_json(key)

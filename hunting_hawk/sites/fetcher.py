@@ -2,7 +2,6 @@
 import logging
 from abc import abstractmethod
 from collections.abc import Mapping
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import fields
 from functools import cached_property
 from html import unescape
@@ -78,7 +77,11 @@ class CargoFetcher(MoveDataFetcher):
             case list():
                 # TODO: DEFINITELY NUKE THIS
                 # Wiki returns &amp for incomplete codes
-                return [unescape(unescape(link)) for link in val if unescape(unescape(link)).strip()]
+                return [
+                    unescape(unescape(link))
+                    for link in val
+                    if unescape(unescape(link)).strip()
+                ]
             case str():
                 return unescape(val)
 
@@ -87,7 +90,13 @@ class CargoFetcher(MoveDataFetcher):
         return [
             f.name
             for f in fields(self.move)
-            if f.type == Optional[File] or f.type == Optional[list[File]] or f.name in ("images", "hitboxes") # Some wikis do not annotate the images as hitboxes
+            if f.type == Optional[File]
+            or f.type == Optional[list[File]]
+            or f.name
+            in (
+                "images",
+                "hitboxes",
+            )  # Some wikis do not annotate the images as hitboxes
         ]
 
     def wikitext_fields(self) -> list[str]:
