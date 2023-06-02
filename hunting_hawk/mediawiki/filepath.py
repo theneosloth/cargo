@@ -1,5 +1,4 @@
-import requests
-from .client import Client, ClientError
+from .client import Client
 
 ImageName = str
 
