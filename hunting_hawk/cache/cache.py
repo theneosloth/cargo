@@ -48,7 +48,7 @@ class RedisCache(Cache):
         self.__dict__ = self._shared_state
 
     def connect(self) -> None:
-        url = os.environ.get("REDIS_HOST", "redis://localhost:6379")
+        url = os.environ.get("REDIS_URL", "redis://localhost:6379")
         self.client = redis.from_url(url, socket_connect_timeout=2)
 
     def get(self, key: str) -> Optional[str]:
