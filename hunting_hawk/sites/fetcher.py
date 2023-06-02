@@ -1,5 +1,7 @@
 """Generic wrapper for a MediaWiki cargo page."""
 import logging
+import re
+import xml.etree.ElementTree as ET
 from abc import abstractmethod
 from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -72,21 +74,41 @@ class CargoFetcher(MoveDataFetcher):
             case str():
                 return get_file_path(self.client, val)
 
+    # TODO:
+    # Send this to the abyss
+    def _parse_wikitext(self, val: Wikitext) -> str:
+        """Attempt to get the text value of a wikitext tag."""
+        wikit = unescape(unescape(val))
+        try:
+            inner = ET.fromstring(wikit).text
+            if not inner:
+                return wikit
+            return re.sub("^'''|'''$", "", inner)
+        except ET.ParseError:
+            pass
+        return wikit
+
     def _unescape_html(self, val: list[Wikitext] | Wikitext) -> list[str] | str:
         match val:
             case list():
                 # TODO: DEFINITELY NUKE THIS
                 # Wiki returns &amp for incomplete codes
-                return [unescape(unescape(link)) for link in val if unescape(unescape(link)).strip()]
+                return [
+                    self._parse_wikitext(link)
+                    for link in val
+                    if unescape(unescape(link)).strip()
+                ]
             case str():
-                return unescape(val)
+                return self._parse_wikitext(val)
 
     def file_fields(self) -> list[str]:
         return [
             f.name
             for f in fields(self.move)
-            # Some wikis do not annotate the images as hitboxes 
-            if f.type == Optional[File] or f.type == Optional[list[File]] or f.name in ("images", "hitboxes")
+            # Some wikis do not annotate the images as hitboxes
+            if f.type == Optional[File]
+            or f.type == Optional[list[File]]
+            or f.name in ("images", "hitboxes")
         ]
 
     def wikitext_fields(self) -> list[str]:
@@ -164,6 +186,7 @@ class CargoFetcher(MoveDataFetcher):
                 f' AND input LIKE "{fuzzy_string(input)}")'
                 f' OR ({self.default_key}="{char}"'
                 f' AND input LIKE "{fuzzy_string(reverse_notation(input))}")'
+                f' OR (name LIKE "{fuzzy_string(input)}")'
             )
         }
 
