@@ -40,6 +40,7 @@
                       packages = [
                           pkgs.redis
                           pkgs.flyctl
+                          pkgs.poetry
                           (mkPoetryEnv{
                               projectDir = self;
                               overrides = overrides;
