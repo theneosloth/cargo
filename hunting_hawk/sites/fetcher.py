@@ -94,12 +94,17 @@ class CargoFetcher(MoveDataFetcher):
                 # TODO: DEFINITELY NUKE THIS
                 # Wiki returns &amp for incomplete codes
                 return [
-                    self._parse_wikitext(link)
+                    unescape(unescape(link))
                     for link in val
                     if unescape(unescape(link)).strip()
                 ]
             case str():
                 return self._parse_wikitext(val)
+            case int() | float():
+                logging.warning(
+                    f"Wikitext value {val} is not a string. Attempting to convert"
+                )
+                return str(val)
 
     def file_fields(self) -> list[str]:
         return [
@@ -122,7 +127,6 @@ class CargoFetcher(MoveDataFetcher):
         file_dicts = {
             k: self._convert_url(v) for k, v in flds.items() if k in self.file_fields()
         }
-
         unescaped_html = {
             k: self._unescape_html(v)
             for k, v in flds.items()
