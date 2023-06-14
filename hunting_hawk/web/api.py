@@ -46,7 +46,7 @@ def get_moves(
                 return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves_by_input(character, move)
         else:
-            cache_key = f"{m.table_name}:characters:{character}:all".lower()
+            cache_key = f"{m.table_name}:characters:{character}:list".lower()
             if r := cache.get_json(cache_key):
                 return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves(character)
