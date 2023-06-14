@@ -21,7 +21,7 @@ cache = FallbackCache()
 
 def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
     def wrapped() -> list[str]:
-        cache_key = f"{m.table_name}:characters:all".lower()
+        cache_key = f"{m.table_name}:characters:list".lower()
 
         if r := cache.get_list(cache_key):
             return r
@@ -57,12 +57,12 @@ def get_moves(
 
 
 @app.get("/BBCF/characters/", response_model=List[str])
-def bbcf_list_characters(background_tasks: BackgroundTasks) -> List[str]:
+def bbcf_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(BBCF, background_tasks)()
 
 
 @app.get("/BBCF/characters/{character}/", response_model=List[BBCF.move])  # type: ignore
-def bbcf_find_move(
+def bbcf_moves(
     background_tasks: BackgroundTasks,
     character: str,
     move: Annotated[str | None, Query(max_length=10)] = None,
@@ -71,7 +71,7 @@ def bbcf_find_move(
 
 
 @app.get("/P4U2R/characters/{character}/", response_model=List[P4U2R.move])  # type: ignore
-def p4u2r_find_move(
+def p4u2r_moves(
     character: str,
     background_tasks: BackgroundTasks,
     move: Annotated[str | None, Query(max_length=10)] = None,
@@ -80,17 +80,17 @@ def p4u2r_find_move(
 
 
 @app.get("/P4U2R/characters/", response_model=List[str])
-def p4u2r_list_characters(background_tasks: BackgroundTasks) -> List[str]:
+def p4u2r_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(P4U2R, background_tasks)()
 
 
 @app.get("/HNK/characters/", response_model=List[str])
-def hnk_list_characters(background_tasks: BackgroundTasks) -> List[str]:
+def hnk_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(HNK, background_tasks)()
 
 
 @app.get("/HNK/characters/{character}/", response_model=List[HNK.move])  # type: ignore
-def hnk_find_move(
+def hnk_moves(
     character: str, move: Annotated[str | None, Query(max_length=10)] = None
 ) -> list[Move] | JSONResponse:
     if move is not None:
@@ -99,12 +99,12 @@ def hnk_find_move(
 
 
 @app.get("/GGACR/characters/", response_model=List[str])
-def ggacr_list_characters(background_tasks: BackgroundTasks) -> List[str]:
+def ggacr_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(GGACR, background_tasks)()
 
 
 @app.get("/GGACR/characters/{character}/", response_model=List[GGACR.move])  # type: ignore
-def ggacr_find_move(
+def ggacr_moves(
     background_tasks: BackgroundTasks,
     character: str,
     move: Annotated[str | None, Query(max_length=10)] = None,
@@ -113,12 +113,12 @@ def ggacr_find_move(
 
 
 @app.get("/MBTL/characters/", response_model=List[str])
-def mbtl_list_characters(background_tasks: BackgroundTasks) -> List[str]:
+def mbtl_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(MBTL, background_tasks)()
 
 
 @app.get("/MBTL/characters/{character}/", response_model=List[MBTL.move])  # type: ignore
-def mbtl_find_move(
+def mbtl_moves(
     background_tasks: BackgroundTasks,
     character: str,
     move: Annotated[str | None, Query(max_length=10)] = None,
@@ -127,12 +127,12 @@ def mbtl_find_move(
 
 
 @app.get("/SCVI/characters/", response_model=List[str])
-def scvi_get_characters(background_tasks: BackgroundTasks) -> List[str]:
+def scvi_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(SCVI, background_tasks)()
 
 
 @app.get("/SCVI/characters/{character}/", response_model=List[SCVI.move])  # type: ignore
-def scvi_get_move(
+def scvi_moves(
     background_tasks: BackgroundTasks,
     character: str,
     move: Annotated[str | None, Query(max_length=10)] = None,
@@ -141,12 +141,12 @@ def scvi_get_move(
 
 
 @app.get("/SF6/characters/", response_model=List[str])
-def sf6_list_characters(background_tasks: BackgroundTasks) -> List[str]:
+def sf6_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(SF6, background_tasks)()
 
 
 @app.get("/SF6/characters/{character}/", response_model=List[SF6.move])  # type: ignore
-def sf6_find_move(
+def sf6_moves(
     background_tasks: BackgroundTasks,
     character: str,
     move: Annotated[str | None, Query(max_length=10)] = None,
@@ -155,12 +155,12 @@ def sf6_find_move(
 
 
 @app.get("/KOFXV/characters/", response_model=List[str])
-def kofxv_list_characters(background_tasks: BackgroundTasks) -> List[str]:
+def kofxv_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(KOFXV, background_tasks)()
 
 
 @app.get("/KOFXV/characters/{character}/", response_model=List[KOFXV.move])  # type: ignore
-def kofxv_find_move(
+def kofxv_moves(
     background_tasks: BackgroundTasks,
     character: str,
     move: Annotated[str | None, Query(max_length=10)] = None,
