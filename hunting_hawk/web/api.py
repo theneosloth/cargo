@@ -1,4 +1,5 @@
 """REST web service for retreiving frame data"""
+import logging
 from typing import Annotated, Callable, List, Optional
 
 from fastapi import BackgroundTasks, FastAPI, Query
@@ -23,8 +24,11 @@ def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list
     def wrapped() -> list[str]:
         cache_key = f"{m.table_name}:characters:list".lower()
 
-        if r := cache.get_list(cache_key):
-            return r
+        try:
+            if r := cache.get_list(cache_key):
+                return r
+        except Exception as e:
+            logging.error(f"Character cache lookup failed with {e}")
 
         res = list(m)
         tasks.add_task(cache.set_list, cache_key, res)
@@ -42,8 +46,11 @@ def get_moves(
         if move is not None:
             move = normalize.normalize(move)
             cache_key = f"{m.table_name}:characters:{character}:{move}".lower()
-            if r := cache.get_json(cache_key):
-                return JSONResponse(content=jsonable_encoder(r))
+            try:
+                if r := cache.get_json(cache_key):
+                    return JSONResponse(content=jsonable_encoder(r))
+            except Exception as e:
+                logging.error(f"Cache lookup failed with {e}")
             moves = m.get_moves_by_input(character, move)
         else:
             cache_key = f"{m.table_name}:characters:{character}:list".lower()
