@@ -22,7 +22,7 @@ cache = FallbackCache()
 
 def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
     def wrapped() -> list[str]:
-        cache_key = f"{m.table_name}:characters:list".lower()
+        cache_key = f"characterlist:{m.table_name}".lower()
 
         try:
             if r := cache.get_list(cache_key):
@@ -45,7 +45,7 @@ def get_moves(
     ) -> list[Move] | JSONResponse:
         if move is not None:
             move = normalize.normalize(move)
-            cache_key = f"{m.table_name}:characters:{character}:{move}".lower()
+            cache_key = f"characters:{m.table_name}:{character}:{move}".lower()
             try:
                 if r := cache.get_json(cache_key):
                     return JSONResponse(content=jsonable_encoder(r))
@@ -53,11 +53,12 @@ def get_moves(
                 logging.error(f"Cache lookup failed with {e}")
             moves = m.get_moves_by_input(character, move)
         else:
-            cache_key = f"{m.table_name}:characters:{character}:list".lower()
+            cache_key = f"characters:{m.table_name}:{character}:list".lower()
             if r := cache.get_json(cache_key):
                 return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves(character)
-        tasks.add_task(cache.set_json, cache_key, moves, pydantic_encoder)
+        if len(moves) == 1:
+            tasks.add_task(cache.set_json, cache_key, moves[0], pydantic_encoder)
         return moves
 
     return wrapped

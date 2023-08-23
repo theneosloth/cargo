@@ -31,11 +31,11 @@ class Cache(ABC):
     @abstractmethod
     def set_json(
         self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> Optional[bool]:
+    ) -> list[Any]:
         pass
 
     @abstractmethod
-    def get_json(self, key: str) -> Optional[list[Any]]:
+    def get_json(self, key: str) -> Any:
         pass
 
 
@@ -73,26 +73,17 @@ class RedisCache(Cache):
 
     def set_json(
         self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> Optional[bool]:
+    ) -> list[Any]:
         json_vals = dumps(val, default=encoder)
-        return self.client.set(key, json_vals, ex=self.expiry)
+        pipe = self.client.pipeline()
+        pipe.json().set(key, "$", loads(json_vals))  # this cant be right
+        pipe.expire(key, self.expiry)
+        return pipe.execute()
 
     def get_json(self, key: str) -> Any:
-        val = self.client.get(key)
-        if not val:
+        if self.client.type(key) != "ReJSON-RL":  # type: ignore
             return None
-        try:
-            json = loads(val)
-            match json:
-                case dict():
-                    return json
-                case list():
-                    return json
-                case _:
-                    raise ValueError(f"Value not a list: {json}")
-        except (JSONDecodeError, ValueError) as e:
-            logging.info(f"Invalid json stored: {e}")
-            return None
+        return self.client.json().get(key)
 
 
 class DictCache(Cache):
@@ -131,17 +122,17 @@ class DictCache(Cache):
 
     def set_json(
         self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> Optional[bool]:
+    ) -> list[Any]:
         json_vals = dumps(val, indent=2, default=encoder)
         self._data[key] = json_vals
-        return True
+        return []
 
-    def get_json(self, key: str) -> Optional[list[Any]]:
+    def get_json(self, key: str) -> Any:
         if key not in self._data:
             return []
         val = self._data[key]
         match val:
-            case list():
+            case list() | dict():
                 return val
             case _:
                 self._data[key] = None
@@ -156,7 +147,11 @@ class FallbackCache(Cache):
             self.selected_cache = RedisCache()
             self.connect()
             self.selected_cache.client.ping()
-        except (ValueError, redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
+        except (
+            ValueError,
+            redis.exceptions.ConnectionError,
+            redis.exceptions.TimeoutError,
+        ) as e:
             logging.info(
                 f"Unable to connect to Redis, falling back to an in memory dict: {e}"
             )
@@ -179,8 +174,8 @@ class FallbackCache(Cache):
 
     def set_json(
         self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> Optional[bool]:
+    ) -> list[Any]:
         return self.selected_cache.set_json(key, val, encoder)
 
-    def get_json(self, key: str) -> Optional[list[Any]]:
+    def get_json(self, key: str) -> Any:
         return self.selected_cache.get_json(key)
