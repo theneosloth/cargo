@@ -1,7 +1,6 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from json import JSONDecodeError, dumps, loads
 from typing import Any, Callable, Optional
 
 import redis
@@ -29,9 +28,7 @@ class Cache(ABC):
         pass
 
     @abstractmethod
-    def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> list[Any]:
+    def set_json(self, key: str, val: Any, encoder: Callable[[Any], Any]) -> list[Any]:
         pass
 
     @abstractmethod
@@ -71,12 +68,9 @@ class RedisCache(Cache):
         pipe.expire(key, self.expiry)
         return pipe.execute()
 
-    def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> list[Any]:
-        json_vals = dumps(val, default=encoder)
+    def set_json(self, key: str, val: Any, encoder: Callable[[Any], Any]) -> list[Any]:
         pipe = self.client.pipeline()
-        pipe.json().set(key, "$", loads(json_vals))  # this cant be right
+        pipe.json().set(key, "$", encoder(val))
         pipe.expire(key, self.expiry)
         return pipe.execute()
 
@@ -120,11 +114,8 @@ class DictCache(Cache):
         self._data[key] = val
         return val
 
-    def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> list[Any]:
-        json_vals = dumps(val, indent=2, default=encoder)
-        self._data[key] = json_vals
+    def set_json(self, key: str, val: Any, encoder: Callable[[Any], Any]) -> list[Any]:
+        self._data[key] = encoder(val)
         return []
 
     def get_json(self, key: str) -> Any:
@@ -172,9 +163,7 @@ class FallbackCache(Cache):
     def set_list(self, key: str, val: list[str]) -> list[Any]:
         return self.selected_cache.set_list(key, val)
 
-    def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> list[Any]:
+    def set_json(self, key: str, val: Any, encoder: Callable[[Any], Any]) -> list[Any]:
         return self.selected_cache.set_json(key, val, encoder)
 
     def get_json(self, key: str) -> Any:
