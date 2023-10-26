@@ -1,9 +1,8 @@
-
 from .numpad import NotationMap
 
 
 def normalize(input: str) -> str:
-    return "".join(input.strip().lower().split())
+    return "".join(input.strip().upper().split())
 
 
 def normalize_name(name: str) -> str:
