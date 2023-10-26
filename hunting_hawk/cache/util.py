@@ -1,7 +1,8 @@
 import logging
 
-from redis.commands.search.field import TextField
-from redis.commands.search.indexDefinition import IndexDefinition, IndexType
+from redis.commands.search.field import TextField  # type: ignore
+from redis.commands.search.indexDefinition import (IndexDefinition,  # type: ignore
+                                                   IndexType)
 from redis.exceptions import ConnectionError, ResponseError, TimeoutError
 from requests_cache import CachedSession, RedisCache  # type: ignore
 

@@ -16,7 +16,6 @@ from hunting_hawk.sites.dustloop import BBCF, GGACR, HNK, P4U2R
 from hunting_hawk.sites.fetcher import CargoFetcher
 from hunting_hawk.sites.mizuumi import MBTL
 from hunting_hawk.sites.supercombo import SCVI, SF6
-from hunting_hawk.sites.wavu import T8
 from hunting_hawk.util import normalize
 
 cache = FallbackCache()
