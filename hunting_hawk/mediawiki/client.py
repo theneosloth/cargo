@@ -5,7 +5,7 @@ from typing import Any
 
 import requests
 
-from hunting_hawk.cache.session import get_requests_session
+from hunting_hawk.cache.util import get_requests_session
 
 from .__version__ import VERSION
 

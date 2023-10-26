@@ -1,8 +1,7 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from json import JSONDecodeError, dumps, loads
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Generator, Optional
 
 import redis
 
@@ -29,13 +28,15 @@ class Cache(ABC):
         pass
 
     @abstractmethod
-    def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> Optional[bool]:
+    def set_json(self, key: str, val: Any, encoder: Callable[[Any], Any]) -> list[Any]:
         pass
 
     @abstractmethod
-    def get_json(self, key: str) -> Optional[list[Any]]:
+    def get_json(self, key: str) -> Any:
+        pass
+
+    @abstractmethod
+    def query(self, char: str, query: str) -> Generator[Any, Any, Any]:
         pass
 
 
@@ -71,28 +72,19 @@ class RedisCache(Cache):
         pipe.expire(key, self.expiry)
         return pipe.execute()
 
-    def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> Optional[bool]:
-        json_vals = dumps(val, default=encoder)
-        return self.client.set(key, json_vals, ex=self.expiry)
+    def set_json(self, key: str, val: Any, encoder: Callable[[Any], Any]) -> list[Any]:
+        pipe = self.client.pipeline()
+        pipe.json().set(key, "$", encoder(val))
+        pipe.expire(key, self.expiry)
+        return pipe.execute()
 
     def get_json(self, key: str) -> Any:
-        val = self.client.get(key)
-        if not val:
-            return None
-        try:
-            json = loads(val)
-            match json:
-                case dict():
-                    return json
-                case list():
-                    return json
-                case _:
-                    raise ValueError(f"Value not a list: {json}")
-        except (JSONDecodeError, ValueError) as e:
-            logging.info(f"Invalid json stored: {e}")
-            return None
+        return self.client.json().get(key)
+
+    def query(self, char: str, query: str) -> Generator[Any, None, None]:
+        f = self.client.ft("movesIdx")
+        res = f.search(f"@chara:({char}) @input|name:({query})")
+        return (r.json for r in res.docs)
 
 
 class DictCache(Cache):
@@ -129,23 +121,23 @@ class DictCache(Cache):
         self._data[key] = val
         return val
 
-    def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> Optional[bool]:
-        json_vals = dumps(val, indent=2, default=encoder)
-        self._data[key] = json_vals
-        return True
+    def set_json(self, key: str, val: Any, encoder: Callable[[Any], Any]) -> list[Any]:
+        self._data[key] = encoder(val)
+        return []
 
-    def get_json(self, key: str) -> Optional[list[Any]]:
+    def get_json(self, key: str) -> Any:
         if key not in self._data:
             return []
         val = self._data[key]
         match val:
-            case list():
+            case list() | dict():
                 return val
             case _:
                 self._data[key] = None
                 return None
+
+    def query(self, char: str, query: str) -> Generator[Any, None, None]:
+        return (v for k, v in self._data.values())
 
 
 class FallbackCache(Cache):
@@ -156,7 +148,11 @@ class FallbackCache(Cache):
             self.selected_cache = RedisCache()
             self.connect()
             self.selected_cache.client.ping()
-        except (ValueError, redis.exceptions.ConnectionError, redis.exceptions.TimeoutError) as e:
+        except (
+            ValueError,
+            redis.exceptions.ConnectionError,
+            redis.exceptions.TimeoutError,
+        ) as e:
             logging.info(
                 f"Unable to connect to Redis, falling back to an in memory dict: {e}"
             )
@@ -177,10 +173,11 @@ class FallbackCache(Cache):
     def set_list(self, key: str, val: list[str]) -> list[Any]:
         return self.selected_cache.set_list(key, val)
 
-    def set_json(
-        self, key: str, val: Any, encoder: Optional[Callable[[Any], Any]]
-    ) -> Optional[bool]:
+    def set_json(self, key: str, val: Any, encoder: Callable[[Any], Any]) -> list[Any]:
         return self.selected_cache.set_json(key, val, encoder)
 
-    def get_json(self, key: str) -> Optional[list[Any]]:
+    def get_json(self, key: str) -> Any:
         return self.selected_cache.get_json(key)
+
+    def query(self, char: str, query: str) -> Any:
+        return self.selected_cache.query(char, query)

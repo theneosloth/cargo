@@ -19,6 +19,11 @@
                         ruff = super.ruff.override {
                             preferWheel = true;
                         };
+                        wikitextparser = super.wikitextparser.overridePythonAttrs(
+                            old: {
+                                buildInputs = (old.buildInputs or [ ]) ++ [ super.setuptools ];
+                            }
+                        );
                     });
             in
               {
@@ -34,6 +39,11 @@
                           created = "now";
                           config = { Cmd = [ "${self.packages.${system}.default}/bin/api" ]; };
                       };
+                  };
+
+                  apps.default = {
+                      type = "app";
+                      program = "${self.packages.${system}.default}/bin/api";
                   };
 
                   devShells.default = pkgs.mkShell {

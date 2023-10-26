@@ -1,0 +1,52 @@
+import logging
+
+from redis.commands.search.field import TextField  # type: ignore
+from redis.commands.search.indexDefinition import (IndexDefinition,  # type: ignore
+                                                   IndexType)
+from redis.exceptions import ConnectionError, ResponseError, TimeoutError
+from requests_cache import CachedSession, RedisCache  # type: ignore
+
+from .cache import RedisCache as CargoCache
+
+TABLE_NAME = "movesIdx"
+
+
+# TODO: definitely not the right place for this
+def get_requests_session() -> CachedSession:
+    try:
+        backend = RedisCache(connection=CargoCache().client)
+        CargoCache().client.ping()
+        return CachedSession(backend=backend, expire_after=60 * 60 * 24)
+    except (AttributeError, ValueError, ConnectionError, TimeoutError) as e:
+        logging.warn(f"Unable to connect to Redis, falling back to temp files: {e}")
+        return CachedSession(use_temp=True)
+
+
+def create_redis_index() -> None:
+    try:
+        c = CargoCache().client
+
+        try:
+            c.ping()
+        except (AttributeError, ValueError, ConnectionError, TimeoutError) as e:
+            logging.warn(f"Unable to connect to Redis. Not creating an index: {e}")
+            return
+
+        schema = (
+            TextField("$.chara", as_name="chara", phonetic_matcher="dm:en"),
+            TextField("$.name", as_name="name", phonetic_matcher="dm:en"),
+            TextField("$.input", as_name="input", phonetic_matcher="dm:en"),
+        )
+
+        rs = c.ft(TABLE_NAME)
+        r = rs.create_index(
+            schema,
+            definition=IndexDefinition(prefix=["moves"], index_type=IndexType.JSON),
+        )
+        if r != b"OK":
+            raise ValueError(f"Failed to create an index.: {r}")
+
+    except ResponseError:
+        logging.warn("Index already exists. Attempting to recreate")
+        rs.dropindex()
+        create_redis_index()
