@@ -1,7 +1,7 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Generator, Optional
 
 import redis
 
@@ -33,6 +33,10 @@ class Cache(ABC):
 
     @abstractmethod
     def get_json(self, key: str) -> Any:
+        pass
+
+    @abstractmethod
+    def query(self, char: str, query: str) -> Generator[Any, Any, Any]:
         pass
 
 
@@ -75,9 +79,12 @@ class RedisCache(Cache):
         return pipe.execute()
 
     def get_json(self, key: str) -> Any:
-        if self.client.type(key) != "ReJSON-RL":  # type: ignore
-            return None
         return self.client.json().get(key)
+
+    def query(self, char: str, query: str) -> Generator[Any, None, None]:
+        f = self.client.ft("movesIdx")
+        res = f.search(f"@chara:({char}) @input|name:({query})")
+        return (r.json for r in res.docs)
 
 
 class DictCache(Cache):
@@ -129,6 +136,9 @@ class DictCache(Cache):
                 self._data[key] = None
                 return None
 
+    def query(self, char: str, query: str) -> Generator[Any, None, None]:
+        return (v for k, v in self._data.values())
+
 
 class FallbackCache(Cache):
     selected_cache: Cache
@@ -168,3 +178,6 @@ class FallbackCache(Cache):
 
     def get_json(self, key: str) -> Any:
         return self.selected_cache.get_json(key)
+
+    def query(self, char: str, query: str) -> Any:
+        return self.selected_cache.query(char, query)

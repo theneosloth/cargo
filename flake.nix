@@ -41,6 +41,11 @@
                       };
                   };
 
+                  apps.default = {
+                      type = "app";
+                      program = "${self.packages.${system}.default}/bin/api";
+                  };
+
                   devShells.default = pkgs.mkShell {
                       packages = [
                           pkgs.redis

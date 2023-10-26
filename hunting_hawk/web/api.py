@@ -1,5 +1,6 @@
 """REST web service for retreiving frame data"""
 import logging
+from json import loads
 from typing import Annotated, Callable, List, Optional
 
 from fastapi import BackgroundTasks, FastAPI, Query
@@ -8,16 +9,24 @@ from fastapi.responses import JSONResponse
 from pydantic.json import pydantic_encoder
 
 from hunting_hawk.cache.cache import FallbackCache
+from hunting_hawk.cache.util import create_redis_index
 from hunting_hawk.mediawiki.cargo import Move
 from hunting_hawk.sites.dreamcancel import KOFXV
 from hunting_hawk.sites.dustloop import BBCF, GGACR, HNK, P4U2R
 from hunting_hawk.sites.fetcher import CargoFetcher
 from hunting_hawk.sites.mizuumi import MBTL
 from hunting_hawk.sites.supercombo import SCVI, SF6
+from hunting_hawk.sites.wavu import T8
 from hunting_hawk.util import normalize
 
-app = FastAPI()
 cache = FallbackCache()
+app = FastAPI()
+
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    logging.info("Initializing...")
+    create_redis_index()
 
 
 def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
@@ -45,20 +54,40 @@ def get_moves(
     ) -> list[Move] | JSONResponse:
         if move is not None:
             move = normalize.normalize(move)
-            cache_key = f"characters_{m.table_name}:{character}:{move}".lower()
+            cache_key = f"moves:{m.table_name}:{character}:{move}".lower()
+            # If we have an exact key match return that first
             try:
                 if r := cache.get_json(cache_key):
                     return JSONResponse(content=jsonable_encoder(r))
             except Exception as e:
                 logging.error(f"Cache lookup failed with {e}")
+
+            # Try to do a fuzzy query on our json
+            try:
+                if res := cache.query(character, move):
+                    # TODO: almost definitely a bottleneck
+                    return JSONResponse(
+                        content=jsonable_encoder([loads(r) for r in res])
+                    )
+            except Exception as e:
+                logging.error(f"Cache query failed with {e}")
             moves = m.get_moves_by_input(character, move)
         else:
-            cache_key = f"characters_{m.table_name}:{character}:list".lower()
+            cache_key = f"moves:{m.table_name}:{character}".lower()
             if r := cache.get_json(cache_key):
                 return JSONResponse(content=jsonable_encoder(r))
             moves = m.get_moves(character)
-        if len(moves) == 1:
-            tasks.add_task(cache.set_json, cache_key, moves[0], pydantic_encoder)
+
+            logging.info(f"Populating cache for {character}")
+            for mo in moves:
+                if hasattr(mo, "input"):
+                    normalized = normalize.normalize(mo.input)  # type: ignore
+                    logging.debug(f"Storing {normalized} for {character}")
+                    cache_key = f"moves:{m.table_name}:{character}:{normalized}".lower()
+                    tasks.add_task(cache.set_json, cache_key, mo, pydantic_encoder)
+                else:
+                    logging.warn(f"Could not find input for {mo}")
+
         return moves
 
     return wrapped

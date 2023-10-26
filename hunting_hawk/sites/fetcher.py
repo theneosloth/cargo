@@ -48,11 +48,13 @@ class CargoFetcher(MoveDataFetcher):
     client: CargoClient
     table_name: str
 
-    def __init__(self, cargo: CargoClient, table_name: str) -> None:
+    def __init__(
+        self, cargo: CargoClient, table_name: str, default_key: str = "chara"
+    ) -> None:
         """Init a cargo object and fetch move definition."""
         self.client = cargo
         self.table_name = table_name
-        self.default_key = "chara"
+        self.default_key = default_key
 
     @cached_property
     def move(self) -> DataclassProxy:
@@ -101,9 +103,9 @@ class CargoFetcher(MoveDataFetcher):
             case str():
                 return self._parse_wikitext(val)
             case int() | float():
-                logging.warning(
-                    f"Wikitext value {val} is not a string. Attempting to convert"
-                )
+                # logging.warning(
+                #     f"Wikitext value {val} is not a string. Attempting to convert"
+                # )
                 return str(val)
 
     def file_fields(self) -> list[str]:
@@ -160,7 +162,7 @@ class CargoFetcher(MoveDataFetcher):
     def _get(self, params: CargoParameters) -> list[Move]:
         """Wrap around cargo_export."""
 
-        field_param = [f.name for f in fields(self.move)]
+        field_param = [f.name for f in fields(self.move)] + [self.default_key]
 
         merged_params: CargoParameters = {
             "fields": ",".join(field_param),
@@ -172,7 +174,7 @@ class CargoFetcher(MoveDataFetcher):
     def get_moves(self, char: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
 
-        params: CargoParameters = {"where": f"chara='{char}'"}
+        params: CargoParameters = {"where": f"{self.default_key}='{char}'"}
         return self._get(params)
 
     def get_moves_by_input(self, char: str, input: str) -> list[Move]:
@@ -203,15 +205,15 @@ class CargoFetcher(MoveDataFetcher):
         """Return the movelist for a character CHARA."""
         return self.get_moves(char)
 
-    def __iter__(self, default_field: str = "chara") -> Iterator[Move]:
+    def __iter__(self) -> Iterator[Move]:
         """Iterate over all characters."""
         iter_params: CargoParameters = {
-            "group_by": default_field,
+            "group_by": self.default_key,
             "tables": self.table_name,
-            "fields": default_field,
+            "fields": self.default_key,
         }
         data = cargo_export(self.client, iter_params)
-        return (self._mutate_fields(c)[default_field] for c in data)
+        return (self._mutate_fields(c)[self.default_key] for c in data)
 
     def __len__(self) -> int:
         """Get the character count."""

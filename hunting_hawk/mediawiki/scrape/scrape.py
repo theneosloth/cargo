@@ -8,7 +8,7 @@ import requests
 from lxml import etree
 from pydantic.dataclasses import DataclassProxy, dataclass
 
-from hunting_hawk.cache.session import get_requests_session
+from hunting_hawk.cache.util import get_requests_session
 from hunting_hawk.mediawiki.cargo import (CargoClient, CargoNetworkError,
                                           CargoParseError, File, Wikitext)
 
@@ -58,7 +58,10 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
     tree = etree.parse(StringIO(data), parser)  # type: ignore
 
     # More issues with stubs
-    (table,) = tree.xpath("//*[@id='mw-content-text']/*[self::ul or self::ol]")  # type: ignore
+    try:
+        (table,) = tree.xpath("//*[@id='mw-content-text']/*[self::ul or self::ol]")  # type: ignore
+    except ValueError:
+        table = None
 
     if table is None or type(table) is not etree._Element:
         raise CargoNetworkError(f"Could not find table. at {table_url}")
