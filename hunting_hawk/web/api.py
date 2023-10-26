@@ -19,7 +19,11 @@ from hunting_hawk.sites.supercombo import SCVI, SF6
 from hunting_hawk.util import normalize
 
 cache = FallbackCache()
-app = FastAPI()
+app = FastAPI(
+    servers=[
+        {"url": "/", "description": "localhost"},
+    ]
+)
 
 
 @app.on_event("startup")
