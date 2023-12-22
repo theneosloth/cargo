@@ -37,7 +37,7 @@ class MoveDataFetcher(Mapping[Any, Any]):
         pass
 
     @abstractmethod
-    def query(self, char: str, query: CargoParameters) -> list[Move]:
+    def query(self, query: CargoParameters) -> list[Move]:
         """Return the movelist for a character CHARA matching query QUERY."""
         pass
 
@@ -198,7 +198,7 @@ class CargoFetcher(MoveDataFetcher):
 
         return self._get(fuzzy_params)
 
-    def query(self, char: str, query: CargoParameters) -> list[Move]:
+    def query(self, query: CargoParameters) -> list[Move]:
         return self._get(query)
 
     def __getitem__(self, char: str) -> list[Move]:

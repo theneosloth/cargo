@@ -12,10 +12,11 @@ from hunting_hawk.cache.cache import FallbackCache
 from hunting_hawk.cache.util import create_redis_index
 from hunting_hawk.mediawiki.cargo import Move
 from hunting_hawk.sites.dreamcancel import KOFXV
-from hunting_hawk.sites.dustloop import BBCF, GGACR, HNK, P4U2R
+from hunting_hawk.sites.dustloop import BBCF, GBVSR, GGACR, HNK, P4U2R
 from hunting_hawk.sites.fetcher import CargoFetcher
 from hunting_hawk.sites.mizuumi import MBTL
 from hunting_hawk.sites.supercombo import SCVI, SF6
+# from hunting_hawk.sites.wavu import T8
 from hunting_hawk.util import normalize
 
 cache = FallbackCache()
@@ -206,3 +207,52 @@ def kofxv_moves(
     move: Annotated[str | None, Query(max_length=10)] = None,
 ) -> list[Move] | JSONResponse:
     return get_moves(KOFXV, background_tasks)(character, move)
+
+
+@app.get("/GBVSR/characters/", response_model=List[str])
+def gbvsr_characters(background_tasks: BackgroundTasks) -> List[str]:
+    return get_characters(GBVSR, background_tasks)()
+
+
+@app.get("/GBVSR/characters/{character}/", response_model=List[GBVSR.move])  # type: ignore
+def gbvsr_moves(
+    background_tasks: BackgroundTasks,
+    character: str,
+    move: Annotated[str | None, Query(max_length=10)] = None,
+) -> list[Move] | JSONResponse:
+    return get_moves(GBVSR, background_tasks)(character, move)
+
+
+# @app.get("/T8/characters/", response_model=List[str])
+# def t8_characters(background_tasks: BackgroundTasks) -> List[str]:
+#     return get_characters(T8, background_tasks)()
+
+
+# @app.get("/T8/characters/{character}/", response_model=List[T8.move])  # type: ignore
+# def t8_moves(
+#     background_tasks: BackgroundTasks,
+#     character: str,
+#     move: Annotated[str | None, Query(max_length=10)] = None,
+# ) -> list[Move] | JSONResponse:
+#     # Wavu wiki WHERE is broken this is a workaround
+#     if move is not None:
+#         cache_key = f"moves:{T8.table_name}:{character}:{move}".lower()
+#     else:
+#         cache_key = f"moves:{T8.table_name}:{character}".lower()
+#         if r := cache.get_json(cache_key):
+#             return JSONResponse(content=jsonable_encoder(r))
+
+#         logging.info(f"Populating cache for {character}")
+#         all_moves = T8.query({})
+#         found_moves: list[Move] = []
+#         import pdb
+
+#         pdb.set_trace()
+#         for mo in all_moves:
+#             if not hasattr(mo, "_pageName"):
+#                 break
+#             if mo._pageName != character:
+#                 continue
+#             found_moves = found_moves + [mo]
+
+#     return found_moves

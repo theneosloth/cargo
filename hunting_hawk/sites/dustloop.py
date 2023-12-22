@@ -29,3 +29,5 @@ GGACR = CargoFetcher(cargo, "MoveData_GGACR")
 P4U2R = CargoFetcher(cargo, "MoveData_P4U2R")
 
 HNK = CargoFetcher(cargo, "MoveData_HNK")
+
+GBVSR = CargoFetcher(cargo, "MoveData_GBVSR")
