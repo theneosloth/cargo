@@ -15,13 +15,15 @@ from hunting_hawk.sites.dreamcancel import KOFXV
 from hunting_hawk.sites.dustloop import BBCF, GBVSR, GGACR, HNK, P4U2R
 from hunting_hawk.sites.fetcher import CargoFetcher
 from hunting_hawk.sites.mizuumi import MBTL
-from hunting_hawk.sites.supercombo import SCVI, SF6
+from hunting_hawk.sites.supercombo import SF6
 # from hunting_hawk.sites.wavu import T8
 from hunting_hawk.util import normalize
 
 cache = FallbackCache()
 app = FastAPI(
+    title="HuntingHawk",
     servers=[
+        {"url": "huntinghawk.fly.dev", "description": "Dev"},
         {"url": "/", "description": "localhost"},
     ]
 )
