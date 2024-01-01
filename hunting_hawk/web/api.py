@@ -169,18 +169,18 @@ def mbtl_moves(
     return get_moves(MBTL, background_tasks)(character, move)
 
 
-@app.get("/SCVI/characters/", response_model=List[str])
-def scvi_characters(background_tasks: BackgroundTasks) -> List[str]:
-    return get_characters(SCVI, background_tasks)()
+# @app.get("/SCVI/characters/", response_model=List[str])
+# def scvi_characters(background_tasks: BackgroundTasks) -> List[str]:
+#     return get_characters(SCVI, background_tasks)()
 
 
-@app.get("/SCVI/characters/{character}/", response_model=List[SCVI.move])  # type: ignore
-def scvi_moves(
-    background_tasks: BackgroundTasks,
-    character: str,
-    move: Annotated[str | None, Query(max_length=10)] = None,
-) -> list[Move] | JSONResponse:
-    return get_moves(SCVI, background_tasks)(character, move)
+# @app.get("/SCVI/characters/{character}/", response_model=List[SCVI.move])  # type: ignore
+# def scvi_moves(
+#     background_tasks: BackgroundTasks,
+#     character: str,
+#     move: Annotated[str | None, Query(max_length=10)] = None,
+# ) -> list[Move] | JSONResponse:
+#     return get_moves(SCVI, background_tasks)(character, move)
 
 
 @app.get("/SF6/characters/", response_model=List[str])
