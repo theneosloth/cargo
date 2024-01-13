@@ -5,7 +5,7 @@ description = "Export utilities for mediawiki cargo tables"
 authors = ["Stefan Kuznetsov <neosloth@sent.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 requests = "^2.27.1"
 pydantic = "^1.10.2"
 fastapi = "^0.88.0"
@@ -15,7 +15,7 @@ lxml = "^4.9.2"
 requests-cache = "^1.0.1"
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^0.940"
+mypy = "^1.8.0"
 pytest = "^7.1.0"
 types-requests = "^2.27.12"
 types-redis = "^4.2.2"
@@ -23,7 +23,7 @@ python-lsp-server = {extras = ["all"], version = "^1.4.1"}
 python-lsp-black = "^1.1.0"
 pyls-isort = "^0.2.2"
 isort = "^5.10.1"
-pylsp-mypy = "^0.5.8"
+pylsp-mypy = "^0.6.8"
 types-beautifulsoup4 = "^4.11.1"
 ruff = "0.1.12"
 lxml-stubs = "^0.4.0"
