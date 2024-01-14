@@ -1,3 +1,5 @@
+# mypy: disable-error-code="call-arg"
+# MyPy complains about optional dataclass fields
 import os
 from inspect import signature
 

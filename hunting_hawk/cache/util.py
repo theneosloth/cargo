@@ -17,7 +17,7 @@ def get_requests_session() -> CachedSession:
         CargoCache().client.ping()
         return CachedSession(backend=backend, expire_after=60 * 60 * 24)
     except (AttributeError, ValueError, ConnectionError, TimeoutError) as e:
-        logging.warn(f"Unable to connect to Redis, falling back to temp files: {e}")
+        logging.warning(f"Unable to connect to Redis, falling back to temp files: {e}")
         return CachedSession(use_temp=True)
 
 
