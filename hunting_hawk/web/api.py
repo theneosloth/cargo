@@ -16,6 +16,7 @@ from hunting_hawk.sites.dustloop import BBCF, GBVSR, GGACR, HNK, P4U2R
 from hunting_hawk.sites.fetcher import CargoFetcher
 from hunting_hawk.sites.mizuumi import MBTL
 from hunting_hawk.sites.supercombo import SF6
+
 # from hunting_hawk.sites.wavu import T8
 from hunting_hawk.util import normalize
 
@@ -25,7 +26,7 @@ app = FastAPI(
     servers=[
         {"url": "huntinghawk.fly.dev", "description": "Dev"},
         {"url": "/", "description": "localhost"},
-    ]
+    ],
 )
 
 
@@ -52,12 +53,8 @@ def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list
     return wrapped
 
 
-def get_moves(
-    m: CargoFetcher, tasks: BackgroundTasks
-) -> Callable[[str, Optional[str]], list[Move] | JSONResponse]:
-    def wrapped(
-        character: str, move: Annotated[str | None, Query(max_length=10)] = None
-    ) -> list[Move] | JSONResponse:
+def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optional[str]], list[Move] | JSONResponse]:
+    def wrapped(character: str, move: Annotated[str | None, Query(max_length=10)] = None) -> list[Move] | JSONResponse:
         if move is not None:
             move = normalize.normalize(move)
             cache_key = f"moves:{m.table_name}:{character}:{move}".lower()
@@ -72,9 +69,7 @@ def get_moves(
             try:
                 if res := cache.query(character, move):
                     # TODO: almost definitely a bottleneck
-                    return JSONResponse(
-                        content=jsonable_encoder([loads(r) for r in res])
-                    )
+                    return JSONResponse(content=jsonable_encoder([loads(r) for r in res]))
             except Exception as e:
                 logging.error(f"Cache query failed with {e}")
             moves = m.get_moves_by_input(character, move)
@@ -87,7 +82,7 @@ def get_moves(
             logging.info(f"Populating cache for {character}")
             for mo in moves:
                 if hasattr(mo, "input"):
-                    normalized = normalize.normalize(mo.input)  # type: ignore
+                    normalized = normalize.normalize(mo.input)
                     logging.debug(f"Storing {normalized} for {character}")
                     cache_key = f"moves:{m.table_name}:{character}:{normalized}".lower()
                     tasks.add_task(cache.set_json, cache_key, mo, pydantic_encoder)
@@ -133,9 +128,7 @@ def hnk_characters(background_tasks: BackgroundTasks) -> List[str]:
 
 
 @app.get("/HNK/characters/{character}/", response_model=List[HNK.move])  # type: ignore
-def hnk_moves(
-    character: str, move: Annotated[str | None, Query(max_length=10)] = None
-) -> list[Move] | JSONResponse:
+def hnk_moves(character: str, move: Annotated[str | None, Query(max_length=10)] = None) -> list[Move] | JSONResponse:
     if move is not None:
         return HNK.get_moves_by_input(character, move)
     return HNK.get_moves(character)

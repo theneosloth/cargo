@@ -168,9 +168,7 @@ def parse_cargo_table(client: Client, table_name: str) -> DataclassProxy:
     except ValidationError as e:
         raise TypeError("Failed to unmarshal the model") from e
 
-    fields = [
-        (k, Optional[to_type(v)], field(default=None)) for k, v in c.cargofields.items()
-    ]
+    fields = [(k, Optional[to_type(v)], field(default=None)) for k, v in c.cargofields.items()]
     result = make_dataclass(table_name, fields, frozen=True)  # type: ignore
     proxy = pydantic_dataclass(result)
 
@@ -178,9 +176,7 @@ def parse_cargo_table(client: Client, table_name: str) -> DataclassProxy:
         case DataclassProxy():
             return proxy
         case default:
-            raise CargoParseError(
-                f"Failed to construct a data class proxy for {table_name}. Got {default}"
-            )
+            raise CargoParseError(f"Failed to construct a data class proxy for {table_name}. Got {default}")
 
 
 def cargo_export(cargo: CargoClient, params: CargoParameters) -> list[Any]:
@@ -189,7 +185,7 @@ def cargo_export(cargo: CargoClient, params: CargoParameters) -> list[Any]:
     req_params = {"limit": cargo.limit} | params
 
     try:
-        res = get(cargo, cargo.export_endpoint(), req_params)
+        res = get(cargo, cargo.export_endpoint(), dict(req_params))
     except ClientError as e:
         raise CargoNetworkError from e
 
