@@ -12,12 +12,20 @@ from typing import Any, Iterator, Optional
 
 from pydantic.dataclasses import DataclassProxy
 
-from hunting_hawk.mediawiki.cargo import (CargoClient, CargoParameters, File, Move,
-                                          Wikitext, cargo_export, parse_cargo_table)
+from hunting_hawk.mediawiki.cargo import (
+    CargoClient,
+    CargoParameters,
+    File,
+    Move,
+    Wikitext,
+    cargo_export,
+    parse_cargo_table,
+)
 from hunting_hawk.mediawiki.client import ClientError
 from hunting_hawk.mediawiki.filepath import get_file_path
-from hunting_hawk.mediawiki.scrape.scrape import \
-    parse_cargo_table as fallback_parse_table
+from hunting_hawk.mediawiki.scrape.scrape import (
+    parse_cargo_table as fallback_parse_table,
+)
 from hunting_hawk.util.normalize import fuzzy_string, reverse_notation
 
 __all__ = ["CargoFetcher", "MoveDataFetcher"]
@@ -48,9 +56,7 @@ class CargoFetcher(MoveDataFetcher):
     client: CargoClient
     table_name: str
 
-    def __init__(
-        self, cargo: CargoClient, table_name: str, default_key: str = "chara"
-    ) -> None:
+    def __init__(self, cargo: CargoClient, table_name: str, default_key: str = "chara") -> None:
         """Init a cargo object and fetch move definition."""
         self.client = cargo
         self.table_name = table_name
@@ -63,9 +69,7 @@ class CargoFetcher(MoveDataFetcher):
         try:
             return parse_cargo_table(self.client, self.table_name)
         except ClientError as e:
-            logging.info(
-                f"Table parse failed with:{e} . Falling back to an HTML parser."
-            )
+            logging.info(f"Table parse failed with:{e} . Falling back to an HTML parser.")
             return fallback_parse_table(self.client, self.table_name)
 
     # TODO: Use type annotations
@@ -95,11 +99,7 @@ class CargoFetcher(MoveDataFetcher):
             case list():
                 # TODO: DEFINITELY NUKE THIS
                 # Wiki returns &amp for incomplete codes
-                return [
-                    unescape(unescape(link))
-                    for link in val
-                    if unescape(unescape(link)).strip()
-                ]
+                return [unescape(unescape(link)) for link in val if unescape(unescape(link)).strip()]
             case str():
                 return self._parse_wikitext(val)
             case int() | float():
@@ -113,27 +113,15 @@ class CargoFetcher(MoveDataFetcher):
             f.name
             for f in fields(self.move)
             # Some wikis do not annotate the images as hitboxes
-            if f.type == Optional[File]
-            or f.type == Optional[list[File]]
-            or f.name in ("images", "hitboxes")
+            if f.type == Optional[File] or f.type == Optional[list[File]] or f.name in ("images", "hitboxes")
         ]
 
     def wikitext_fields(self) -> list[str]:
-        return [
-            f.name
-            for f in fields(self.move)
-            if f.type == Optional[Wikitext] or f.type == Optional[list[Wikitext]]
-        ]
+        return [f.name for f in fields(self.move) if f.type == Optional[Wikitext] or f.type == Optional[list[Wikitext]]]
 
     def _mutate_fields(self, flds: dict[Any, Any]) -> dict[Any, Any]:
-        file_dicts = {
-            k: self._convert_url(v) for k, v in flds.items() if k in self.file_fields()
-        }
-        unescaped_html = {
-            k: self._unescape_html(v)
-            for k, v in flds.items()
-            if k in self.wikitext_fields()
-        }
+        file_dicts = {k: self._convert_url(v) for k, v in flds.items() if k in self.file_fields()}
+        unescaped_html = {k: self._unescape_html(v) for k, v in flds.items() if k in self.wikitext_fields()}
 
         return flds | unescaped_html | file_dicts
 
