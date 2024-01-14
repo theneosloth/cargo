@@ -19,9 +19,6 @@
                         ruff = super.ruff.override {
                             preferWheel = true;
                         };
-                        mypy = super.mypy.override {
-                            preferWheel = true;
-                        };
                     });
             in
               {
