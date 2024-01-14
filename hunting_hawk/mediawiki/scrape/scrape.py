@@ -72,12 +72,12 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
 
     items = table.xpath("./li")
 
-    if not items or not isinstance(type(items), list):
+    if not items or not isinstance(items, list):
         raise CargoParseError(f"Could not find list items for list at {table_url}")
 
     field_names = [
         [t.strip() for t in "".join(tag.xpath(".//text()")).split("-")]  # type: ignore
-        for tag in items  # type: ignore
+        for tag in items
     ]
 
     fields = [(f[0], Optional[name_to_type(f[1])], field(default=None)) for f in field_names]
