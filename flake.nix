@@ -12,18 +12,13 @@
         flake-utils.lib.eachDefaultSystem (system:
             let
                 # see https://github.com/nix-community/poetry2nix/tree/master#api for more functions and examples.
-                inherit (poetry2nix.legacyPackages.${system}) mkPoetryApplication defaultPoetryOverrides mkPoetryEnv;
+                inherit (import poetry2nix {inherit pkgs;}) mkPoetryApplication defaultPoetryOverrides mkPoetryEnv;
                 pkgs = nixpkgs.legacyPackages.${system};
                 overrides = defaultPoetryOverrides.extend
                     (self: super: {
                         ruff = super.ruff.override {
                             preferWheel = true;
                         };
-                        wikitextparser = super.wikitextparser.overridePythonAttrs(
-                            old: {
-                                buildInputs = (old.buildInputs or [ ]) ++ [ super.setuptools ];
-                            }
-                        );
                     });
             in
               {

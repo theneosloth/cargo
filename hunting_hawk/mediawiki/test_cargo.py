@@ -27,34 +27,31 @@ def test_init() -> None:
 def test_endpoints() -> None:
     assert test_cargo.index_endpoint() == "https://example.com/wiki/superfluous"
 
-    assert (
-        test_cargo.export_endpoint()
-        == "https://example.com/wiki/superfluous?title=Special:CargoExport&format=json"
-    )
+    assert test_cargo.export_endpoint() == "https://example.com/wiki/superfluous?title=Special:CargoExport&format=json"
 
-    assert (
-        test_cargo.tables_endpoint()
-        == "https://example.com/wiki/superfluous/Special:CargoTables"
-    )
+    assert test_cargo.tables_endpoint() == "https://example.com/wiki/superfluous/Special:CargoTables"
 
 
 @pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
 def test_to_type() -> None:
     test_cases = [
-        (CargoField(type="String"), str),
-        (CargoField(type="Wikitext"), Wikitext),
-        (CargoField(type="Wikitext string"), Wikitext),
-        (CargoField(type="Integer"), int),
-        (CargoField(type="Float"), float),
-        (CargoField(type="Boolean"), bool),
-        (CargoField(type="File"), File),
-        (CargoField(type="String", isList=""), list[str]),
-        (CargoField(type="Wikitext", isList=""), list[Wikitext]),
-        (CargoField(type="Wikitext string", isList=""), list[Wikitext]),
-        (CargoField(type="Integer", isList=""), list[int]),
-        (CargoField(type="Float", isList=""), list[float]),
-        (CargoField(type="Boolean", isList=""), list[bool]),
-        (CargoField(type="File", isList=""), list[File]),
+        (CargoField(type="String", isList=None, delimiter=None), str),
+        (CargoField(type="Wikitext", isList=None, delimiter=None), Wikitext),
+        (CargoField(type="Wikitext string", isList=None, delimiter=None), Wikitext),
+        (CargoField(type="Integer", isList=None, delimiter=None), int),
+        (CargoField(type="Float", isList=None, delimiter=None), float),
+        (CargoField(type="Boolean", isList=None, delimiter=None), bool),
+        (CargoField(type="File", isList=None, delimiter=None), File),
+        (CargoField(type="String", isList=None, delimiter=None), list[str]),
+        (CargoField(type="Wikitext", isList=None, delimiter=None), list[Wikitext]),
+        (
+            CargoField(type="Wikitext string", isList=None, delimiter=None),
+            list[Wikitext],
+        ),
+        (CargoField(type="Integer", isList=None, delimiter=None), list[int]),
+        (CargoField(type="Float", isList=None, delimiter=None), list[float]),
+        (CargoField(type="Boolean", isList=None, delimiter=None), list[bool]),
+        (CargoField(type="File", isList=None, delimiter=None), list[File]),
     ]
 
     for wiki_string, expected_type in test_cases:

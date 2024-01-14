@@ -1,8 +1,7 @@
 import logging
 
-from redis.commands.search.field import TextField  # type: ignore
-from redis.commands.search.indexDefinition import (IndexDefinition,  # type: ignore
-                                                   IndexType)
+from redis.commands.search.field import TextField
+from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.exceptions import ConnectionError, ResponseError, TimeoutError
 from requests_cache import CachedSession, RedisCache  # type: ignore
 
@@ -41,7 +40,7 @@ def create_redis_index() -> None:
         rs = c.ft(TABLE_NAME)
         r = rs.create_index(
             schema,
-            definition=IndexDefinition(prefix=["moves"], index_type=IndexType.JSON),
+            definition=IndexDefinition(prefix=["moves"], index_type=IndexType.JSON),  # type: ignore
         )
         if r != b"OK":
             raise ValueError(f"Failed to create an index.: {r}")
