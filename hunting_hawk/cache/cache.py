@@ -98,7 +98,7 @@ class DictCache(Cache):
             return None
 
         val = self._data[key]
-        if type(val) is str:
+        if isinstance(val, str):
             return val
         raise
 
@@ -153,9 +153,7 @@ class FallbackCache(Cache):
             redis.exceptions.ConnectionError,
             redis.exceptions.TimeoutError,
         ) as e:
-            logging.info(
-                f"Unable to connect to Redis, falling back to an in memory dict: {e}"
-            )
+            logging.info(f"Unable to connect to Redis, falling back to an in memory dict: {e}")
             self.selected_cache = DictCache()
 
     def connect(self) -> None:

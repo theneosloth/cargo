@@ -9,8 +9,13 @@ from lxml import etree
 from pydantic.dataclasses import DataclassProxy, dataclass
 
 from hunting_hawk.cache.util import get_requests_session
-from hunting_hawk.mediawiki.cargo import (CargoClient, CargoNetworkError,
-                                          CargoParseError, File, Wikitext)
+from hunting_hawk.mediawiki.cargo import (
+    CargoClient,
+    CargoNetworkError,
+    CargoParseError,
+    File,
+    Wikitext,
+)
 
 """Web scraping functions that do not call the mediawiki API."""
 
@@ -54,8 +59,7 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
     data = req.content.decode("utf-8")
 
     parser = etree.HTMLParser()
-    # Stub library is incorrect, HTML Parser is a valid argument
-    tree = etree.parse(StringIO(data), parser)  # type: ignore
+    tree = etree.parse(StringIO(data), parser)
 
     # More issues with stubs
     try:
@@ -68,16 +72,15 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
 
     items = table.xpath("./li")
 
-    if not items or type(items) is not list:
+    if not items or not isinstance(type(items), list):
         raise CargoParseError(f"Could not find list items for list at {table_url}")
 
     field_names = [
-        [t.strip() for t in "".join(tag.xpath(".//text()")).split("-")] for tag in items  # type: ignore
+        [t.strip() for t in "".join(tag.xpath(".//text()")).split("-")]  # type: ignore
+        for tag in items  # type: ignore
     ]
 
-    fields = [
-        (f[0], Optional[name_to_type(f[1])], field(default=None)) for f in field_names
-    ]
+    fields = [(f[0], Optional[name_to_type(f[1])], field(default=None)) for f in field_names]
 
     result = make_dataclass(
         table_name,
@@ -91,6 +94,4 @@ def parse_cargo_table(cargo: CargoClient, table_name: str) -> DataclassProxy:
         case DataclassProxy():
             return proxy
         case default:
-            raise CargoParseError(
-                f"Failed to construct a data class proxy for {table_url}. Got {default}"
-            )
+            raise CargoParseError(f"Failed to construct a data class proxy for {table_url}. Got {default}")
