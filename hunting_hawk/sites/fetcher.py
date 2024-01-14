@@ -111,13 +111,13 @@ class CargoFetcher(MoveDataFetcher):
     def file_fields(self) -> list[str]:
         return [
             f.name
-            for f in fields(self.move)
+            for f in fields(self.move)  # type: ignore
             # Some wikis do not annotate the images as hitboxes
             if f.type == Optional[File] or f.type == Optional[list[File]] or f.name in ("images", "hitboxes")
         ]
 
     def wikitext_fields(self) -> list[str]:
-        return [f.name for f in fields(self.move) if f.type == Optional[Wikitext] or f.type == Optional[list[Wikitext]]]
+        return [f.name for f in fields(self.move) if f.type == Optional[Wikitext] or f.type == Optional[list[Wikitext]]]  # type: ignore
 
     def _mutate_fields(self, flds: dict[Any, Any]) -> dict[Any, Any]:
         file_dicts = {k: self._convert_url(v) for k, v in flds.items() if k in self.file_fields()}
@@ -126,7 +126,7 @@ class CargoFetcher(MoveDataFetcher):
         return flds | unescaped_html | file_dicts
 
     def fill_move(self, move: dict[Any, Any]) -> Any:
-        flds = fields(self.move)
+        flds = fields(self.move)  # type: ignore
         blank_fields = {t.name: None for t in flds}
         filled_move = blank_fields | self._mutate_fields(move)
         return self.move(**filled_move)
@@ -150,7 +150,7 @@ class CargoFetcher(MoveDataFetcher):
     def _get(self, params: CargoParameters) -> list[Move]:
         """Wrap around cargo_export."""
 
-        field_param = [f.name for f in fields(self.move)] + [self.default_key]
+        field_param = [f.name for f in fields(self.move)] + [self.default_key]  # type: ignore
 
         merged_params: CargoParameters = {
             "fields": ",".join(field_param),
