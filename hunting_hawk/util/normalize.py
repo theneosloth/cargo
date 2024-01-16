@@ -1,8 +1,9 @@
 from .numpad import NotationMap
+from html import unescape
 
 
 def normalize(input: str) -> str:
-    return "".join(input.strip().upper().split())
+    return "".join(unescape(input).strip().upper().split())
 
 
 def normalize_name(name: str) -> str:
