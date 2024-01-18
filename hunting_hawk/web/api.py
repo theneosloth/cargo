@@ -265,7 +265,7 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Rich:
         thumbnail_width=200,
         thumbnail_height=200,
         width=500,
-        height=None,
+        height=300,
     )
 
 
