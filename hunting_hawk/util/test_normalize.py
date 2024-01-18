@@ -1,9 +1,11 @@
 from .normalize import fuzzy_string, normalize, normalize_name, reverse_notation
 import pytest
 
+
 def test_normalize() -> None:
     assert normalize("236    P") == "236P"
     assert normalize("214lk") == "214LK"
+
 
 @pytest.mark.skip(reason="Not implemented")
 def test_normalize_name() -> None:

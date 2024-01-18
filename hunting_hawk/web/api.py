@@ -1,13 +1,14 @@
 """REST web service for retreiving frame data"""
 import logging
 from json import loads
-from typing import Annotated, Callable, List, Optional
-
-from fastapi import BackgroundTasks, FastAPI, Query
+from typing import Annotated, Callable, List, Optional, Awaitable
+from fastapi import BackgroundTasks, FastAPI, Query, HTTPException, Response, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic.json import pydantic_encoder
 
+from urllib.parse import quote
+from hunting_hawk.util.oembed import parse_url, Photo
 from hunting_hawk.cache.cache import FallbackCache
 from hunting_hawk.cache.util import create_redis_index
 from hunting_hawk.mediawiki.cargo import Move
@@ -24,9 +25,9 @@ cache = FallbackCache()
 app = FastAPI(
     title="HuntingHawk",
     servers=[
-        {"url": "huntinghawk.fly.dev", "description": "Dev"},
-        {"url": "/", "description": "localhost"},
+        {"url": "/", "description": "Huntinghawk"},
     ],
+    docs_url="/",
 )
 
 
@@ -34,6 +35,10 @@ app = FastAPI(
 async def startup_event() -> None:
     logging.info("Initializing...")
     create_redis_index()
+
+
+def populate_cache_for(character: str) -> None:
+    raise NotImplementedError
 
 
 def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
@@ -56,8 +61,8 @@ def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list
 def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optional[str]], list[Move] | JSONResponse]:
     def wrapped(character: str, move: Annotated[str | None, Query(max_length=10)] = None) -> list[Move] | JSONResponse:
         if move is not None:
-            move = normalize.normalize(move)
-            cache_key = f"moves:{m.table_name}:{character}:{move}".lower()
+            normalized_move = normalize.normalize(move)
+            cache_key = f"moves:{m.table_name}:{character}:{normalized_move}".lower()
             # If we have an exact key match return that first
             try:
                 if r := cache.get_json(cache_key):
@@ -72,7 +77,7 @@ def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optiona
                     return JSONResponse(content=jsonable_encoder([loads(r) for r in res]))
             except Exception as e:
                 logging.error(f"Cache query failed with {e}")
-            moves = m.get_moves_by_input(character, move)
+            moves = m.get_moves_by_input(character, normalized_move)
         else:
             cache_key = f"moves:{m.table_name}:{character}".lower()
             if r := cache.get_json(cache_key):
@@ -162,20 +167,6 @@ def mbtl_moves(
     return get_moves(MBTL, background_tasks)(character, move)
 
 
-# @app.get("/SCVI/characters/", response_model=List[str])
-# def scvi_characters(background_tasks: BackgroundTasks) -> List[str]:
-#     return get_characters(SCVI, background_tasks)()
-
-
-# @app.get("/SCVI/characters/{character}/", response_model=List[SCVI.move])  # type: ignore
-# def scvi_moves(
-#     background_tasks: BackgroundTasks,
-#     character: str,
-#     move: Annotated[str | None, Query(max_length=10)] = None,
-# ) -> list[Move] | JSONResponse:
-#     return get_moves(SCVI, background_tasks)(character, move)
-
-
 @app.get("/SF6/characters/", response_model=List[str])
 def sf6_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(SF6, background_tasks)()
@@ -218,36 +209,65 @@ def gbvsr_moves(
     return get_moves(GBVSR, background_tasks)(character, move)
 
 
-# @app.get("/T8/characters/", response_model=List[str])
-# def t8_characters(background_tasks: BackgroundTasks) -> List[str]:
-#     return get_characters(T8, background_tasks)()
+# Here be dragons
+# I need to make a live deploy to test this, so hacking together an awful implementation
 
 
-# @app.get("/T8/characters/{character}/", response_model=List[T8.move])  # type: ignore
-# def t8_moves(
-#     background_tasks: BackgroundTasks,
-#     character: str,
-#     move: Annotated[str | None, Query(max_length=10)] = None,
-# ) -> list[Move] | JSONResponse:
-#     # Wavu wiki WHERE is broken this is a workaround
-#     if move is not None:
-#         cache_key = f"moves:{T8.table_name}:{character}:{move}".lower()
-#     else:
-#         cache_key = f"moves:{T8.table_name}:{character}".lower()
-#         if r := cache.get_json(cache_key):
-#             return JSONResponse(content=jsonable_encoder(r))
+def generate_oembed_for(game: str, character: str, move: str) -> Photo:
+    fetcher = None
+    match game.upper():
+        case "GBVSR":
+            fetcher = GBVSR
+        case "BBCF":
+            fetcher = BBCF
+        case "GGACR":
+            fetcher = GGACR
+        case "KOFXV":
+            fetcher = KOFXV
+        case "SF6":
+            fetcher = SF6
+        case _:
+            raise ValueError("Game not supported")
+    moves = fetcher.get_moves_by_input(character, move)
+    if len(moves) == 0:
+        raise HTTPException(status_code=404)
+    res = moves[0]
+    image = "about:blank"
 
-#         logging.info(f"Populating cache for {character}")
-#         all_moves = T8.query({})
-#         found_moves: list[Move] = []
-#         import pdb
+    if not (hasattr(res, "images")):
+        raise ValueError("No images")
 
-#         pdb.set_trace()
-#         for mo in all_moves:
-#             if not hasattr(mo, "_pageName"):
-#                 break
-#             if mo._pageName != character:
-#                 continue
-#             found_moves = found_moves + [mo]
+    if len(res.images) > 0:
+        image = res.images[0]
+    return Photo(width=200, height=200, url=image, author_name=character, title=move)
 
-#     return found_moves
+
+@app.middleware("http")
+async def add_oembed_header(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    response = await call_next(request)
+    url = f"{request.base_url}oembed?url={quote(str(request.url))}&format=json"
+    response.headers[
+        "Link"
+    ] = f'Link: <{url}; rel="alternate"; type="text/jsonl+oembed"; title="Huntinghawk frame data parser"'
+    return response
+
+
+@app.get("/oembed")
+def generate_oembed(background_tasks: BackgroundTasks, format: str, url: str) -> Photo:
+    if format != "json":
+        raise HTTPException(status_code=501)
+    requested_url = parse_url(url)
+
+    if len(requested_url.parsed_url.parts) < 3:
+        raise HTTPException(status_code=404)
+
+    # ["/", "KOFXV", "characters", "Iori"]
+    _, game, _, character, *_ = requested_url.parsed_url.parts
+
+    if "move" not in requested_url.queries:
+        raise HTTPException(status_code=503)
+
+    move = requested_url.queries["move"][0]
+    embed = generate_oembed_for(game, character, move)
+
+    return embed

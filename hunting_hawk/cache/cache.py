@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Generator, Optional
 
 import redis
+from redis.commands.search.query import Query
 
 
 class Cache(ABC):
@@ -83,7 +84,8 @@ class RedisCache(Cache):
 
     def query(self, char: str, query: str) -> Generator[Any, None, None]:
         f = self.client.ft("movesIdx")
-        res = f.search(f"@chara:({char}) @input|name:({query})")
+        query = Query(f"@chara:({char}) @input|name:({query})").slop(1)  # type: ignore
+        res = f.search(query)
         return (r.json for r in res.docs)
 
 
