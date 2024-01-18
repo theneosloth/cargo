@@ -15,10 +15,11 @@ class OEmbedType:
     version: str = "1.0"
     title: Optional[str] = None
     author_name: Optional[str] = None
+    author_url: Optional[str] = None
     provider_name: Optional[str] = None
     provider_url: Optional[str] = None
     cache_age: Optional[int] = None
-    thumbnail_url: Optional[url] = None
+    thumbnail_url: Optional[str] = None
     thumbnail_width: Optional[int] = None
     thumbnail_height: Optional[int] = None
 

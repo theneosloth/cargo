@@ -221,7 +221,7 @@ def gbvsr_moves(
 # I need to make a live deploy to test this, so hacking together an awful implementation
 
 
-def generate_oembed_for(game: str, character: str, move: str) -> Photo:
+def generate_oembed_for(game: str, character: str, move: str, url: str) -> Photo:
     fetcher = None
     match game.upper():
         case "GBVSR":
@@ -238,6 +238,7 @@ def generate_oembed_for(game: str, character: str, move: str) -> Photo:
             raise ValueError("Game not supported")
     moves = fetcher.get_moves_by_input(character, move)
     if len(moves) == 0:
+        logging.error("Could not find any moves during oembed generation")
         raise HTTPException(status_code=404)
     res = moves[0]
     image = "about:blank"
@@ -256,11 +257,15 @@ def generate_oembed_for(game: str, character: str, move: str) -> Photo:
     return Photo(
         width=200,
         height=200,
-        url=image,
+        url=url,
         author_name=character,
+        author_url="https://huntinghawk.fly.dev/",
         title=move,
         provider_name="Huntinghawk",
         provider_url="https://huntinghawk.fly.dev/",
+        thumbnail_url=image,
+        thumbnail_height=200,
+        thumbnail_width=200,
     )
 
 
@@ -275,7 +280,7 @@ async def add_oembed_header(request: Request, call_next: Callable[[Request], Awa
 
 
 @app.get("/oembed")
-def generate_oembed(background_tasks: BackgroundTasks, format: str, url: str) -> Photo:
+def generate_oembed(format: str, url: str) -> Photo:
     if format != "json":
         raise HTTPException(status_code=501)
     requested_url = parse_url(url)
@@ -290,6 +295,6 @@ def generate_oembed(background_tasks: BackgroundTasks, format: str, url: str) ->
         raise HTTPException(status_code=503)
 
     move = requested_url.queries["move"][0]
-    embed = generate_oembed_for(game, character, move)
+    embed = generate_oembed_for(game, character, move, url)
 
     return embed
