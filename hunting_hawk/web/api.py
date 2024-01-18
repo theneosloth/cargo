@@ -245,8 +245,14 @@ def generate_oembed_for(game: str, character: str, move: str) -> Photo:
     if not (hasattr(res, "images")):
         raise ValueError("No images")
 
-    if len(res.images) > 0:
-        image = res.images[0]
+    match res.images:
+        case str():
+            image = res.images
+        case [url]:
+            image = url
+        case _:
+            raise ValueError("Could not find an image")
+
     return Photo(width=200, height=200, url=image, author_name=character, title=move)
 
 
