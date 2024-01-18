@@ -267,8 +267,7 @@ def generate_oembed_for(game: str, character: str, move: str) -> Photo:
 @app.middleware("http")
 async def add_oembed_header(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     response = await call_next(request)
-    quoted_url = quote(f"{str(request.url)}&format=json")
-    url = f"{request.base_url}oembed?url={quoted_url}"
+    url = f"{request.base_url}oembed?url={quote(str(request.url))}&format=json"
     response.headers[
         "Link"
     ] = f'<{url}>; rel="alternate"; type="application/json+oembed"; title="Huntinghawk frame data parser"'
