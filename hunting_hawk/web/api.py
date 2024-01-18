@@ -253,7 +253,7 @@ def generate_oembed_for(game: str, character: str, move: str) -> Photo:
         case _:
             raise ValueError("Could not find an image")
 
-    return Photo(width=200, height=200, url=image, author_name=character, title=move)
+    return Photo(width=200, height=200, url=image, author_name=character, title=move, provider_name="Huntinghawk", provider_url="https://huntinghawk.fly.dev/")
 
 
 @app.middleware("http")
