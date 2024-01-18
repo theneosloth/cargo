@@ -1,13 +1,13 @@
 """REST web service for retreiving frame data"""
 import logging
 from json import loads
-from typing import Annotated, Callable, List, Optional
-
-from fastapi import BackgroundTasks, FastAPI, Query, HTTPException
+from typing import Annotated, Callable, List, Optional, Awaitable
+from fastapi import BackgroundTasks, FastAPI, Query, HTTPException, Response, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic.json import pydantic_encoder
 
+from urllib.parse import quote
 from hunting_hawk.util.oembed import parse_url, Photo
 from hunting_hawk.cache.cache import FallbackCache
 from hunting_hawk.cache.util import create_redis_index
@@ -27,6 +27,7 @@ app = FastAPI(
     servers=[
         {"url": "/", "description": "Huntinghawk"},
     ],
+    docs_url="/",
 )
 
 
@@ -235,6 +236,16 @@ def generate_oembed_for(game: str, character: str, move: str) -> Photo:
     if len(res.images) > 0:
         image = res.images[0]
     return Photo(width=200, height=200, url=image, author_name=character, title=move)
+
+
+@app.middleware("http")
+async def add_oembed_header(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+    response = await call_next(request)
+    url = f"{request.base_url}oembed?url={quote(str(request.url))}&format=json"
+    response.headers[
+        "Link"
+    ] = f'Link: <{url}; rel="alternate"; type="text/jsonl+oembed"; title="Huntinghawk frame data parser"'
+    return response
 
 
 @app.get("/oembed")
