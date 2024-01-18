@@ -21,6 +21,8 @@ from hunting_hawk.sites.supercombo import SF6
 # from hunting_hawk.sites.wavu import T8
 from hunting_hawk.util import normalize
 
+MAX_MOVE_LENGTH = 25
+
 cache = FallbackCache()
 app = FastAPI(
     title="HuntingHawk",
@@ -59,7 +61,10 @@ def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list
 
 
 def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optional[str]], list[Move] | JSONResponse]:
-    def wrapped(character: str, move: Annotated[str | None, Query(max_length=10)] = None) -> list[Move] | JSONResponse:
+    def wrapped(
+        character: str,
+        move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
+    ) -> list[Move] | JSONResponse:
         if move is not None:
             normalized_move = normalize.normalize(move)
             cache_key = f"moves:{m.table_name}:{character}:{normalized_move}".lower()
@@ -108,7 +113,7 @@ def bbcf_characters(background_tasks: BackgroundTasks) -> List[str]:
 def bbcf_moves(
     background_tasks: BackgroundTasks,
     character: str,
-    move: Annotated[str | None, Query(max_length=10)] = None,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
 ) -> list[Move] | JSONResponse:
     return get_moves(BBCF, background_tasks)(character, move)
 
@@ -117,7 +122,7 @@ def bbcf_moves(
 def p4u2r_moves(
     character: str,
     background_tasks: BackgroundTasks,
-    move: Annotated[str | None, Query(max_length=10)] = None,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
 ) -> list[Move] | JSONResponse:
     return get_moves(P4U2R, background_tasks)(character, move)
 
@@ -133,7 +138,10 @@ def hnk_characters(background_tasks: BackgroundTasks) -> List[str]:
 
 
 @app.get("/HNK/characters/{character}/", response_model=List[HNK.move])  # type: ignore
-def hnk_moves(character: str, move: Annotated[str | None, Query(max_length=10)] = None) -> list[Move] | JSONResponse:
+def hnk_moves(
+    character: str,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
+) -> list[Move] | JSONResponse:
     if move is not None:
         return HNK.get_moves_by_input(character, move)
     return HNK.get_moves(character)
@@ -148,7 +156,7 @@ def ggacr_characters(background_tasks: BackgroundTasks) -> List[str]:
 def ggacr_moves(
     background_tasks: BackgroundTasks,
     character: str,
-    move: Annotated[str | None, Query(max_length=10)] = None,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
 ) -> list[Move] | JSONResponse:
     return get_moves(GGACR, background_tasks)(character, move)
 
@@ -162,7 +170,7 @@ def mbtl_characters(background_tasks: BackgroundTasks) -> List[str]:
 def mbtl_moves(
     background_tasks: BackgroundTasks,
     character: str,
-    move: Annotated[str | None, Query(max_length=10)] = None,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
 ) -> list[Move] | JSONResponse:
     return get_moves(MBTL, background_tasks)(character, move)
 
@@ -176,7 +184,7 @@ def sf6_characters(background_tasks: BackgroundTasks) -> List[str]:
 def sf6_moves(
     background_tasks: BackgroundTasks,
     character: str,
-    move: Annotated[str | None, Query(max_length=10)] = None,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
 ) -> list[Move] | JSONResponse:
     return get_moves(SF6, background_tasks)(character, move)
 
@@ -190,7 +198,7 @@ def kofxv_characters(background_tasks: BackgroundTasks) -> List[str]:
 def kofxv_moves(
     background_tasks: BackgroundTasks,
     character: str,
-    move: Annotated[str | None, Query(max_length=10)] = None,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
 ) -> list[Move] | JSONResponse:
     return get_moves(KOFXV, background_tasks)(character, move)
 
@@ -204,7 +212,7 @@ def gbvsr_characters(background_tasks: BackgroundTasks) -> List[str]:
 def gbvsr_moves(
     background_tasks: BackgroundTasks,
     character: str,
-    move: Annotated[str | None, Query(max_length=10)] = None,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
 ) -> list[Move] | JSONResponse:
     return get_moves(GBVSR, background_tasks)(character, move)
 
@@ -248,7 +256,7 @@ async def add_oembed_header(request: Request, call_next: Callable[[Request], Awa
     url = f"{request.base_url}oembed?url={quote(str(request.url))}&format=json"
     response.headers[
         "Link"
-    ] = f'Link: <{url}; rel="alternate"; type="text/jsonl+oembed"; title="Huntinghawk frame data parser"'
+    ] = f'Link: <{url}; rel="alternate"; type="text/json+oembed"; title="Huntinghawk frame data parser"'
     return response
 
 
