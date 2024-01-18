@@ -262,7 +262,7 @@ async def add_oembed_header(request: Request, call_next: Callable[[Request], Awa
     url = f"{request.base_url}oembed?url={quote(str(request.url))}&format=json"
     response.headers[
         "Link"
-    ] = f'Link: <{url}; rel="alternate"; type="text/json+oembed"; title="Huntinghawk frame data parser"'
+    ] = f'<{url}>; rel="alternate"; type="text/json+oembed"; title="Huntinghawk frame data parser"'
     return response
 
 
