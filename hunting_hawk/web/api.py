@@ -272,7 +272,7 @@ def generate_oembed(background_tasks: BackgroundTasks, format: str, url: str) ->
         raise HTTPException(status_code=501)
     requested_url = parse_url(url)
 
-    if len(requested_url.parsed_url.parts) < 3:
+    if len(requested_url.parsed_url.parts) < 4:
         raise HTTPException(status_code=404)
 
     # ["/", "KOFXV", "characters", "Iori"]
