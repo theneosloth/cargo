@@ -50,6 +50,8 @@ class Rich(OEmbedType):
     html: str
     width: int
     height: int
+    # Not to spec  but I see it working for fxtwitter?
+    url: Optional[str] = None
     type: str = "rich"
 
 

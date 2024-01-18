@@ -243,7 +243,7 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Rich:
     res = moves[0]
     image = "about:blank"
 
-    if not (hasattr(res, "images")) or not (hasattr(res, "name")):
+    if not (hasattr(res, "images")):
         raise ValueError("No images")
 
     match res.images:
@@ -255,17 +255,14 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Rich:
             raise ValueError("Could not find an image")
 
     return Rich(
-        html=res.name,
+        url=url,
         author_name=character,
         author_url="https://huntinghawk.fly.dev/",
-        title=move,
-        provider_name="Huntinghawk",
-        provider_url="https://huntinghawk.fly.dev/",
-        thumbnail_url=image,
-        thumbnail_width=200,
-        thumbnail_height=200,
+        html=image,
         width=500,
         height=300,
+        provider_name="Huntinghawk",
+        provider_url="https://huntinghawk.fly.dev/",
     )
 
 
@@ -276,11 +273,10 @@ async def add_oembed_header(request: Request, call_next: Callable[[Request], Awa
     response.headers[
         "Link"
     ] = f'<{url}>; rel="alternate"; type="application/json+oembed"; title="Huntinghawk frame data parser"'
-    response.media_type
     return response
 
 
-@app.get("/oembed")
+@app.get("/oembed", response_model=Rich, response_model_exclude_none=True)
 def generate_oembed(format: str, url: str) -> Rich:
     if format != "json":
         raise HTTPException(status_code=501)
