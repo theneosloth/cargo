@@ -77,7 +77,7 @@ def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optiona
 
             # Try to do a fuzzy query on our json
             try:
-                if res := cache.query(character, move):
+                if res := list(cache.query(character, move)):
                     # TODO: almost definitely a bottleneck
                     return JSONResponse(content=jsonable_encoder([loads(r) for r in res]))
             except Exception as e:
@@ -253,13 +253,22 @@ def generate_oembed_for(game: str, character: str, move: str) -> Photo:
         case _:
             raise ValueError("Could not find an image")
 
-    return Photo(width=200, height=200, url=image, author_name=character, title=move, provider_name="Huntinghawk", provider_url="https://huntinghawk.fly.dev/")
+    return Photo(
+        width=200,
+        height=200,
+        url=image,
+        author_name=character,
+        title=move,
+        provider_name="Huntinghawk",
+        provider_url="https://huntinghawk.fly.dev/",
+    )
 
 
 @app.middleware("http")
 async def add_oembed_header(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     response = await call_next(request)
-    url = f"{request.base_url}oembed?url={quote(str(request.url))}&format=json"
+    quoted_url = quote(f"{str(request.url)}&format=json")
+    url = f"{request.base_url}oembed?url={quoted_url}"
     response.headers[
         "Link"
     ] = f'<{url}>; rel="alternate"; type="application/json+oembed"; title="Huntinghawk frame data parser"'
