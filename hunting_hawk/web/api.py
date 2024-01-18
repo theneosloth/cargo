@@ -37,6 +37,10 @@ async def startup_event() -> None:
     create_redis_index()
 
 
+def populate_cache_for(character: str) -> None:
+    raise NotImplementedError
+
+
 def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
     def wrapped() -> list[str]:
         cache_key = f"characterlist_{m.table_name}".lower()
@@ -57,8 +61,8 @@ def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list
 def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optional[str]], list[Move] | JSONResponse]:
     def wrapped(character: str, move: Annotated[str | None, Query(max_length=10)] = None) -> list[Move] | JSONResponse:
         if move is not None:
-            move = normalize.normalize(move)
-            cache_key = f"moves:{m.table_name}:{character}:{move}".lower()
+            normalized_move = normalize.normalize(move)
+            cache_key = f"moves:{m.table_name}:{character}:{normalized_move}".lower()
             # If we have an exact key match return that first
             try:
                 if r := cache.get_json(cache_key):
@@ -73,7 +77,7 @@ def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optiona
                     return JSONResponse(content=jsonable_encoder([loads(r) for r in res]))
             except Exception as e:
                 logging.error(f"Cache query failed with {e}")
-            moves = m.get_moves_by_input(character, move)
+            moves = m.get_moves_by_input(character, normalized_move)
         else:
             cache_key = f"moves:{m.table_name}:{character}".lower()
             if r := cache.get_json(cache_key):
