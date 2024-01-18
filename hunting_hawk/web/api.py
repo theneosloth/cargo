@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic.json import pydantic_encoder
 
 from urllib.parse import quote
-from hunting_hawk.util.oembed import parse_url, Photo
+from hunting_hawk.util.oembed import parse_url, Rich
 from hunting_hawk.cache.cache import FallbackCache
 from hunting_hawk.cache.util import create_redis_index
 from hunting_hawk.mediawiki.cargo import Move
@@ -221,7 +221,7 @@ def gbvsr_moves(
 # I need to make a live deploy to test this, so hacking together an awful implementation
 
 
-def generate_oembed_for(game: str, character: str, move: str, url: str) -> Photo:
+def generate_oembed_for(game: str, character: str, move: str, url: str) -> Rich:
     fetcher = None
     match game.upper():
         case "GBVSR":
@@ -243,7 +243,7 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Photo
     res = moves[0]
     image = "about:blank"
 
-    if not (hasattr(res, "images")):
+    if not (hasattr(res, "images")) or not (hasattr(res, "name")):
         raise ValueError("No images")
 
     match res.images:
@@ -254,18 +254,18 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Photo
         case _:
             raise ValueError("Could not find an image")
 
-    return Photo(
-        width=200,
-        height=200,
-        url=url,
+    return Rich(
+        html=res.name,
         author_name=character,
         author_url="https://huntinghawk.fly.dev/",
         title=move,
         provider_name="Huntinghawk",
         provider_url="https://huntinghawk.fly.dev/",
         thumbnail_url=image,
-        thumbnail_height=200,
         thumbnail_width=200,
+        thumbnail_height=200,
+        width=500,
+        height=None,
     )
 
 
@@ -276,11 +276,12 @@ async def add_oembed_header(request: Request, call_next: Callable[[Request], Awa
     response.headers[
         "Link"
     ] = f'<{url}>; rel="alternate"; type="application/json+oembed"; title="Huntinghawk frame data parser"'
+    response.media_type
     return response
 
 
 @app.get("/oembed")
-def generate_oembed(format: str, url: str) -> Photo:
+def generate_oembed(format: str, url: str) -> Rich:
     if format != "json":
         raise HTTPException(status_code=501)
     requested_url = parse_url(url)
