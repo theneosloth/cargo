@@ -249,8 +249,8 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Rich:
     match res.images:
         case str():
             image = res.images
-        case [url, *_]:
-            image = url
+        case [image_url, *_]:
+            image = image_url
         case _:
             raise ValueError("Could not find an image")
 
