@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic.json import pydantic_encoder
 
 from urllib.parse import quote
-from hunting_hawk.util.oembed import parse_url, Link
+from hunting_hawk.util.oembed import parse_url, Photo
 from hunting_hawk.cache.cache import FallbackCache
 from hunting_hawk.cache.util import create_redis_index
 from hunting_hawk.mediawiki.cargo import Move
@@ -221,7 +221,7 @@ def gbvsr_moves(
 # I need to make a live deploy to test this, so hacking together an awful implementation
 
 
-def generate_oembed_for(game: str, character: str, move: str, url: str) -> Link:
+def generate_oembed_for(game: str, character: str, move: str, url: str) -> Photo:
     fetcher = None
     match game.upper():
         case "GBVSR":
@@ -254,9 +254,12 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Link:
         case _:
             raise ValueError("Could not find an image")
 
-    return Link(
+    return Photo(
         author_name=character,
         author_url="https://huntinghawk.fly.dev/",
+        url=image,
+        width=300,
+        height=300,
         provider_name="Huntinghawk",
         provider_url="https://huntinghawk.fly.dev/",
     )
@@ -267,13 +270,13 @@ async def add_oembed_header(request: Request, call_next: Callable[[Request], Awa
     response = await call_next(request)
     url = f"{request.base_url}oembed?url={quote(str(request.url))}&format=json"
     response.headers[
-        "Link"
+        "Photo"
     ] = f'<{url}>; rel="alternate"; type="application/json+oembed"; title="Huntinghawk frame data parser"'
     return response
 
 
-@app.get("/oembed", response_model=Link, response_model_exclude_none=True)
-def generate_oembed(format: str, url: str) -> Link:
+@app.get("/oembed", response_model=Photo, response_model_exclude_none=True)
+def generate_oembed(format: str, url: str) -> Photo:
     if format != "json":
         raise HTTPException(status_code=501)
     requested_url = parse_url(url)
