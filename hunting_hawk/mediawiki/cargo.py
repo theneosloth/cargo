@@ -165,6 +165,10 @@ def parse_cargo_table(client: Client, table_name: str) -> DataclassProxy:
     res = cached_get(client, client.api_endpoint(), params)
     try:
         c = CargoFields.parse_obj(res)
+        # TODO: remove this hack
+        if "_pageName" not in c.cargofields:
+            c.cargofields["_pageName"] = CargoField(type="String")
+
     except ValidationError as e:
         raise TypeError("Failed to unmarshal the model") from e
 

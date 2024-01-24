@@ -6,7 +6,11 @@ import uvicorn
 
 def start() -> None:
     port = int(os.getenv("HUNTING_HAWK_PORT", "8080"))
-    logging.basicConfig(level=logging.INFO)
+    if os.getenv("HUNTING_HAWK_DEBUG"):
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug("Debug logging enabled")
+    else:
+        logging.basicConfig(level=logging.INFO)
     uvicorn.run(
         "hunting_hawk.web.api:app",
         host="0.0.0.0",
