@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hunting_hawk"
-version = "0.3.0"
+version = "0.4.0"
 description = "Export utilities for mediawiki cargo tables"
 authors = ["Stefan Kuznetsov <neosloth@sent.com>"]
 
