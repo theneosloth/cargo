@@ -104,6 +104,20 @@ def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optiona
     return wrapped
 
 
+@app.get("/T8/characters/", response_model=List[str])
+def t8_characters(background_tasks: BackgroundTasks) -> List[str]:
+    return get_characters(T8, background_tasks)()
+
+
+@app.get("/T8/characters/{character}/", response_model=List[T8.move])  # type: ignore
+def t8_moves(
+    background_tasks: BackgroundTasks,
+    character: str,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
+) -> list[Move] | JSONResponse:
+    return get_moves(T8, background_tasks)(character, move)
+
+
 @app.get("/BBCF/characters/", response_model=List[str])
 def bbcf_characters(background_tasks: BackgroundTasks) -> List[str]:
     return get_characters(BBCF, background_tasks)()
@@ -215,20 +229,6 @@ def gbvsr_moves(
     move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
 ) -> list[Move] | JSONResponse:
     return get_moves(GBVSR, background_tasks)(character, move)
-
-
-@app.get("/T8/characters/", response_model=List[str])
-def t8_characters(background_tasks: BackgroundTasks) -> List[str]:
-    return get_characters(T8, background_tasks)()
-
-
-@app.get("/T8/characters/{character}/", response_model=List[T8.move])  # type: ignore
-def t8_moves(
-    background_tasks: BackgroundTasks,
-    character: str,
-    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
-) -> list[Move] | JSONResponse:
-    return get_moves(T8, background_tasks)(character, move)
 
 
 # Here be dragons
