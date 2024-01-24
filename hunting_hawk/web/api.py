@@ -12,13 +12,13 @@ from hunting_hawk.util.oembed import parse_url, Photo
 from hunting_hawk.cache.cache import FallbackCache
 from hunting_hawk.cache.util import create_redis_index
 from hunting_hawk.mediawiki.cargo import Move
-from hunting_hawk.sites.dreamcancel import KOFXV
-from hunting_hawk.sites.dustloop import BBCF, GBVSR, GGACR, HNK, P4U2R
-from hunting_hawk.sites.fetcher import CargoFetcher
-from hunting_hawk.sites.mizuumi import MBTL
-from hunting_hawk.sites.supercombo import SF6
+from hunting_hawk.sources.dreamcancel import KOFXV
+from hunting_hawk.sources.dustloop import BBCF, GBVSR, GGACR, HNK, P4U2R
+from hunting_hawk.sources.fetcher import CargoFetcher
+from hunting_hawk.sources.mizuumi import MBTL
+from hunting_hawk.sources.supercombo import SF6
 
-# from hunting_hawk.sites.wavu import T8
+from hunting_hawk.sources.wavu import T8
 from hunting_hawk.util import normalize
 
 MAX_MOVE_LENGTH = 25
@@ -217,19 +217,29 @@ def gbvsr_moves(
     return get_moves(GBVSR, background_tasks)(character, move)
 
 
+@app.get("/T8/characters/", response_model=List[str])
+def t8_characters(background_tasks: BackgroundTasks) -> List[str]:
+    return get_characters(T8, background_tasks)()
+
+
+@app.get("/T8/characters/{character}/", response_model=List[T8.move])  # type: ignore
+def t8_moves(
+    background_tasks: BackgroundTasks,
+    character: str,
+    move: Annotated[str | None, Query(max_length=MAX_MOVE_LENGTH)] = None,
+) -> list[Move] | JSONResponse:
+    return get_moves(T8, background_tasks)(character, move)
+
+
 # Here be dragons
 # I need to make a live deploy to test this, so hacking together an awful implementation
 
 
-def generate_oembed_for(game: str, character: str, move: str, url: str) -> Photo:
+def generate_oembed_for(background_tasks: BackgroundTasks, game: str, character: str, move: str, url: str) -> Photo:
     fetcher = None
     match game.upper():
         case "GBVSR":
             fetcher = GBVSR
-        case "BBCF":
-            fetcher = BBCF
-        case "GGACR":
-            fetcher = GGACR
         case "KOFXV":
             fetcher = KOFXV
         case "SF6":
@@ -241,7 +251,7 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Photo
         logging.error("Could not find any moves during oembed generation")
         raise HTTPException(status_code=404)
     res = moves[0]
-    image = "about:blank"
+    image = ""
 
     if not (hasattr(res, "images")):
         raise ValueError("No images")
@@ -255,9 +265,13 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Photo
             raise ValueError("Could not find an image")
 
     return Photo(
+        cache_age=604800,
         author_name=character,
         author_url="https://huntinghawk.fly.dev/",
-        url=image,
+        url=url,
+        thumbnail_url=image,
+        thumbnail_height=200,
+        thumbnail_width=200,
         width=300,
         height=300,
         provider_name="Huntinghawk",
@@ -269,14 +283,15 @@ def generate_oembed_for(game: str, character: str, move: str, url: str) -> Photo
 async def add_oembed_header(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     response = await call_next(request)
     url = f"{request.base_url}oembed?url={quote(str(request.url))}&format=json"
-    response.headers[
-        "Photo"
-    ] = f'<{url}>; rel="alternate"; type="application/json+oembed"; title="Huntinghawk frame data parser"'
+    if "characters" in url:
+        response.headers[
+            "Link"
+        ] = f'<{url}>; rel="alternate"; type="application/json+oembed"; title="Huntinghawk frame data parser"'
     return response
 
 
 @app.get("/oembed", response_model=Photo, response_model_exclude_none=True)
-def generate_oembed(format: str, url: str) -> Photo:
+def generate_oembed(tasks: BackgroundTasks, format: str, url: str) -> Photo:
     if format != "json":
         raise HTTPException(status_code=501)
     requested_url = parse_url(url)
@@ -291,6 +306,6 @@ def generate_oembed(format: str, url: str) -> Photo:
         raise HTTPException(status_code=503)
 
     move = requested_url.queries["move"][0]
-    embed = generate_oembed_for(game, character, move, url)
+    embed = generate_oembed_for(tasks, game, character, move, url)
 
     return embed

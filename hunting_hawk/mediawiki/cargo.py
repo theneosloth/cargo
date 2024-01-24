@@ -182,7 +182,7 @@ def parse_cargo_table(client: Client, table_name: str) -> DataclassProxy:
 def cargo_export(cargo: CargoClient, params: CargoParameters) -> list[Any]:
     # TODO: Leaky Typing
     """Call the export point. Caches the URL."""
-    req_params = {"limit": cargo.limit} | params
+    req_params = params
 
     try:
         res = get(cargo, cargo.export_endpoint(), dict(req_params))
