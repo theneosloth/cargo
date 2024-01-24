@@ -60,7 +60,7 @@ class CargoFetcher(MoveDataFetcher):
         """Init a cargo object and fetch move definition."""
         self.client = cargo
         self.table_name = table_name
-        self.default_key = default_key
+        self.default_key = f"{table_name}.{default_key}"
 
     @cached_property
     def move(self) -> DataclassProxy:
@@ -176,9 +176,15 @@ class CargoFetcher(MoveDataFetcher):
 
         fuzzy_params: CargoParameters = {
             "where": (
+<<<<<<< HEAD
                 f"({self.table_name}.{self.default_key}='{char}'"
                 f" AND input LIKE '{fuzzy_string(input)}')"
                 f" OR ({self.table_name}.{self.default_key}='{char}'"
+=======
+                f"({self.default_key}='{char}'"
+                f" AND input LIKE '{fuzzy_string(input)}')"
+                f" OR ({self.default_key}='{char}'"
+>>>>>>> main
                 f" AND input LIKE '{fuzzy_string(reverse_notation(input))}')"
                 f" OR (name LIKE '{fuzzy_string(input)}')"
             )
