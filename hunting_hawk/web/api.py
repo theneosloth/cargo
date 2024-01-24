@@ -78,27 +78,30 @@ def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optiona
             # If we have an exact key match return that first
             try:
                 if r := cache.get_json(cache_key):
+                    logging.debug(f"Retrieving {cache_key} from cache")
                     return JSONResponse(content=jsonable_encoder(r))
             except Exception as e:
                 logging.error(f"Cache lookup failed with {e}")
 
             # Try to do a fuzzy query on our json
             try:
-                if res := list(cache.query(character, move)):
+                logging.debug(f"Querying the cache for {move}")
+                if res := list(cache.query(m.default_key, character, move)):
                     # TODO: almost definitely a bottleneck
                     return JSONResponse(content=jsonable_encoder([loads(r) for r in res]))
             except Exception as e:
                 logging.error(f"Cache query failed with {e}")
-            moves = m.get_moves_by_input(character, normalized_move)
-            tasks.add_task(populate_cache, m, character, moves)
+
+            if  moves := m.get_moves_by_input(character, normalized_move):
+                logging.info(f"Populating cache for {character} {move}")
+                tasks.add_task(populate_cache, m, character, moves)
         else:
             cache_key = f"moves:{m.table_name}:{character}".lower()
             if r := cache.get_json(cache_key):
                 return JSONResponse(content=jsonable_encoder(r))
-            moves = m.get_moves(character)
-
-            logging.info(f"Populating cache for {character}")
-            tasks.add_task(populate_cache, m, character, moves)
+            if moves := m.get_moves(character):
+                logging.info(f"Populating cache for {character}")
+                tasks.add_task(populate_cache, m, character, moves)
         return moves
 
     return wrapped

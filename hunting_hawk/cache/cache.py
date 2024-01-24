@@ -37,7 +37,7 @@ class Cache(ABC):
         pass
 
     @abstractmethod
-    def query(self, char: str, query: str) -> Generator[Any, Any, Any]:
+    def query(self, table_key: str, char: str, query: str) -> Generator[Any, Any, Any]:
         pass
 
 
@@ -82,9 +82,9 @@ class RedisCache(Cache):
     def get_json(self, key: str) -> Any:
         return self.client.json().get(key)
 
-    def query(self, char: str, query: str) -> Generator[Any, None, None]:
+    def query(self, table_key: str, char: str, query: str) -> Generator[Any, None, None]:
         f = self.client.ft("movesIdx")
-        query = Query(f"@chara:({char}) @input|name:({query})").slop(1)  # type: ignore
+        query = Query(f"@{table_key}:({char}) @input|name:({query})").slop(1)  # type: ignore
         res = f.search(query)
         return (r.json for r in res.docs)
 
@@ -138,7 +138,7 @@ class DictCache(Cache):
                 self._data[key] = None
                 return None
 
-    def query(self, char: str, query: str) -> Generator[Any, None, None]:
+    def query(self, table_key: str, char: str, query: str) -> Generator[Any, None, None]:
         return (v for k, v in self._data.values())
 
 
@@ -179,5 +179,5 @@ class FallbackCache(Cache):
     def get_json(self, key: str) -> Any:
         return self.selected_cache.get_json(key)
 
-    def query(self, char: str, query: str) -> Any:
-        return self.selected_cache.query(char, query)
+    def query(self, table_key: str, char: str, query: str) -> Any:
+        return self.selected_cache.query(table_key, char, query)
