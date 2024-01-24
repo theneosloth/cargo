@@ -162,13 +162,13 @@ class CargoFetcher(MoveDataFetcher):
     def get_moves(self, char: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
 
-        params: CargoParameters = {"where": f"{self.default_key}='{char}'"}
+        params: CargoParameters = {"where": f"{self.table_name}.{self.default_key}='{char}'"}
         return self._get(params)
 
     def get_moves_by_input(self, char: str, input: str) -> list[Move]:
         """Return the movelist for a character CHARA."""
         exact_params: CargoParameters = {
-            "where": f"{self.default_key}='{self.table_name}.{char}' AND input='{input}' OR name='{input}'",
+            "where": f"{self.table_name}.{self.default_key}='{char}' AND input='{input}' OR name='{input}'",
         }
         result = self._get(exact_params)
         if result:
@@ -176,9 +176,9 @@ class CargoFetcher(MoveDataFetcher):
 
         fuzzy_params: CargoParameters = {
             "where": (
-                f"({self.default_key}='{self.table_name}.{char}'"
+                f"({self.table_name}.{self.default_key}='{char}'"
                 f" AND input LIKE '{fuzzy_string(input)}')"
-                f" OR ({self.default_key}='{char}'"
+                f" OR ({self.table_name}.{self.default_key}='{char}'"
                 f" AND input LIKE '{fuzzy_string(reverse_notation(input))}')"
                 f" OR (name LIKE '{fuzzy_string(input)}')"
             )
