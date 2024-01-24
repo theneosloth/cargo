@@ -39,8 +39,15 @@ async def startup_event() -> None:
     create_redis_index()
 
 
-def populate_cache_for(character: str) -> None:
-    raise NotImplementedError
+def populate_cache(m: CargoFetcher, character: str, moves: list[Move]) -> None:
+    for mo in moves:
+        if hasattr(mo, "input"):
+            normalized = normalize.normalize(mo.input)
+            logging.debug(f"Storing {normalized} for {character}")
+            cache_key = f"moves:{m.table_name}:{character}:{normalized}".lower()
+            cache.set_json(cache_key, mo, pydantic_encoder)
+        else:
+            logging.warn(f"Could not find input for {mo}")
 
 
 def get_characters(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[], list[str]]:
@@ -83,6 +90,7 @@ def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optiona
             except Exception as e:
                 logging.error(f"Cache query failed with {e}")
             moves = m.get_moves_by_input(character, normalized_move)
+            tasks.add_task(populate_cache, m, character, moves)
         else:
             cache_key = f"moves:{m.table_name}:{character}".lower()
             if r := cache.get_json(cache_key):
@@ -90,15 +98,7 @@ def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optiona
             moves = m.get_moves(character)
 
             logging.info(f"Populating cache for {character}")
-            for mo in moves:
-                if hasattr(mo, "input"):
-                    normalized = normalize.normalize(mo.input)
-                    logging.debug(f"Storing {normalized} for {character}")
-                    cache_key = f"moves:{m.table_name}:{character}:{normalized}".lower()
-                    tasks.add_task(cache.set_json, cache_key, mo, pydantic_encoder)
-                else:
-                    logging.warn(f"Could not find input for {mo}")
-
+            tasks.add_task(populate_cache, m, character, moves)
         return moves
 
     return wrapped
