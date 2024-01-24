@@ -16,9 +16,7 @@ class Client:
     index_path: str
     api_path: str
     headers: dict[str, str] = field(
-        default_factory=lambda: {
-            "User-Agent": f"cargo-export/{VERSION}. https://github.com/theneosloth/cargo"
-        },
+        default_factory=lambda: {"User-Agent": f"cargo-export/{VERSION}. https://github.com/theneosloth/cargo"},
         kw_only=True,
     )
     timeout: int = field(default=10, kw_only=True)
@@ -68,9 +66,7 @@ def raw_get(client: Client, path: str, params: dict[str, Any]) -> requests.Respo
         raise ClientNetworkError from e
 
 
-def get(
-    client: Client, path: str, params: dict[str, Any]
-) -> list[str] | dict[Any, Any]:
+def get(client: Client, path: str, params: dict[str, Any]) -> list[str] | dict[Any, Any]:
     """Get a json from a given URL."""
     try:
         res = raw_get(client, path, params).json()
@@ -87,13 +83,12 @@ def get(
 
 
 # TODO: Deduplicate
-def cached_get(
-    client: Client, path: str, params: dict[str, Any]
-) -> list[str] | dict[Any, Any]:
+def cached_get(client: Client, path: str, params: dict[str, Any]) -> list[str] | dict[Any, Any]:
     """Get a json from a given URL. Caches the response"""
     try:
         session = get_requests_session()
         res = session.get(path, headers=client.headers, params=params).json()
+
     except requests.exceptions.JSONDecodeError as e:
         raise ClientDecodeError from e
 
