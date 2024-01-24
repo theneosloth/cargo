@@ -176,15 +176,9 @@ class CargoFetcher(MoveDataFetcher):
 
         fuzzy_params: CargoParameters = {
             "where": (
-<<<<<<< HEAD
                 f"({self.table_name}.{self.default_key}='{char}'"
                 f" AND input LIKE '{fuzzy_string(input)}')"
                 f" OR ({self.table_name}.{self.default_key}='{char}'"
-=======
-                f"({self.default_key}='{char}'"
-                f" AND input LIKE '{fuzzy_string(input)}')"
-                f" OR ({self.default_key}='{char}'"
->>>>>>> main
                 f" AND input LIKE '{fuzzy_string(reverse_notation(input))}')"
                 f" OR (name LIKE '{fuzzy_string(input)}')"
             )
