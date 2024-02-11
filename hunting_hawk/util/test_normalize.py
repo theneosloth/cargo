@@ -9,7 +9,7 @@ def test_normalize() -> None:
 def test_normalize_strip() -> None:
     # This is not ideal
     # TODO: Implement one way normalziation
-    assert normalize("Ángel") == "ngel"
+    assert normalize("Ángel") == "NGEL"
 
 
 def test_reverse_notaiton() -> None:
