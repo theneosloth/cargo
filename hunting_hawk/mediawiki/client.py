@@ -69,15 +69,16 @@ def raw_get(client: Client, path: str, params: dict[str, Any]) -> requests.Respo
 def get(client: Client, path: str, params: dict[str, Any]) -> list[str] | dict[Any, Any]:
     """Get a json from a given URL."""
     try:
-        res = raw_get(client, path, params).json()
+        response = raw_get(client, path, params)
+        js = response.json()
     except requests.exceptions.JSONDecodeError as e:
-        raise ClientDecodeError from e
+        raise ClientDecodeError(f"Failed to decode {response.text}") from e
 
-    match res:
+    match js:
         case {"error": err}:
             raise ClientApiError(err)
         case list() | dict():
-            return res
+            return js
         case _:
             raise TypeError("Unknown return type")
 
