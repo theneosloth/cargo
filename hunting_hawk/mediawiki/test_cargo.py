@@ -3,7 +3,6 @@
 import os
 from inspect import signature
 
-import pytest
 
 from .cargo import CargoClient, CargoField, File, Wikitext, parse_cargo_table, to_type
 
