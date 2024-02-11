@@ -1,9 +1,9 @@
 # mypy: disable-error-code="call-arg"
 # MyPy complains about optional dataclass fields
 import os
+import pytest
 from inspect import signature
 
-import pytest
 
 from .cargo import CargoClient, CargoField, File, Wikitext, parse_cargo_table, to_type
 

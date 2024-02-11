@@ -196,7 +196,7 @@ class CargoFetcher(MoveDataFetcher):
     def __iter__(self) -> Iterator[Move]:
         """Iterate over all characters."""
         iter_params: CargoParameters = {
-            "group_by": self.default_key,
+            "group_by": f"{self.table_name}.{self.default_key}",
             "tables": self.table_name,
             "fields": self.default_key,
         }

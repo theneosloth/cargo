@@ -134,7 +134,7 @@ class CargoClient(Client):
 
     table_export_path: str
     tables_path: str
-    limit: int = 200
+    limit: int = 500
 
     def export_endpoint(self) -> str:
         """Construct a cargo export endpoint for a given mediawiki site."""
@@ -165,9 +165,6 @@ def parse_cargo_table(client: Client, table_name: str) -> DataclassProxy:
     res = cached_get(client, client.api_endpoint(), params)
     try:
         c = CargoFields.parse_obj(res)
-        # TODO: remove this hack
-        if "_pageName" not in c.cargofields:
-            c.cargofields["_pageName"] = CargoField(type="String")
 
     except ValidationError as e:
         raise TypeError("Failed to unmarshal the model") from e
