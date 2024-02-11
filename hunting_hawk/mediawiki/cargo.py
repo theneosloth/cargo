@@ -134,7 +134,7 @@ class CargoClient(Client):
 
     table_export_path: str
     tables_path: str
-    limit: int = 200
+    limit: int = 500
 
     def export_endpoint(self) -> str:
         """Construct a cargo export endpoint for a given mediawiki site."""
