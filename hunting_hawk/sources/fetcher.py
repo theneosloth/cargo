@@ -46,7 +46,7 @@ class MoveDataFetcher(Mapping[Any, Any]):
 
     @abstractmethod
     def query(self, query: CargoParameters) -> list[Move]:
-        """Return the movelist for a character CHARA matching query QUERY."""
+        """Return the movelist for matching query QUERY."""
         pass
 
 
@@ -206,7 +206,7 @@ class CargoFetcher(MoveDataFetcher):
     def __len__(self) -> int:
         """Get the character count."""
         length_params: CargoParameters = {
-            "group_by": "_pageName",
+            "group_by": self.default_key,
             "tables": self.table_name,
         }
         return len(cargo_export(self.client, length_params))
