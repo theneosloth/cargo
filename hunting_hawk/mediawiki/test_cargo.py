@@ -34,7 +34,7 @@ def test_endpoints() -> None:
     assert test_cargo.tables_endpoint() == "https://example.com/wiki/superfluous/Special:CargoTables"
 
 
-@pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
+# @pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
 def test_to_type() -> None:
     test_cases = [
         (CargoField(type="String"), str),
@@ -57,7 +57,7 @@ def test_to_type() -> None:
         assert to_type(wiki_string) == expected_type
 
 
-@pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
+# @pytest.mark.skipif(not RUN_SMOKE, reason="Makes real requests.")
 def test_scrape_ggst() -> None:
     WIKI_DOMAIN = "https://dustloop.com"
     WIKI_BASE_PATH = "/wiki/index.php"
