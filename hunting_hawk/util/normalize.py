@@ -1,13 +1,12 @@
 from .numpad import NotationMap
 from html import unescape
+from re import sub
 
 
 def normalize(input: str) -> str:
-    return "".join(unescape(input).strip().upper().split())
-
-
-def normalize_name(name: str) -> str:
-    return "_".join(normalize(name).split())
+    unescaped = unescape(input)
+    ascii = sub(r"[^\x00-\x7f]", r"", unescaped)
+    return "".join(ascii.strip().upper().split())
 
 
 # TODO: Only works on the first instance of the input
