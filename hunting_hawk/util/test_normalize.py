@@ -1,5 +1,4 @@
-from .normalize import fuzzy_string, normalize, normalize_name, reverse_notation
-import pytest
+from .normalize import fuzzy_string, normalize, reverse_notation
 
 
 def test_normalize() -> None:
@@ -7,15 +6,17 @@ def test_normalize() -> None:
     assert normalize("214lk") == "214LK"
 
 
-@pytest.mark.skip(reason="Not implemented")
-def test_normalize_name() -> None:
-    assert normalize_name("Ángel") == "Angel"
+def test_normalize_strip() -> None:
+    # This is not ideal
+    # TODO: Implement one way normalziation
+    assert normalize("Ángel") == "ngel"
 
 
 def test_reverse_notaiton() -> None:
     assert reverse_notation("236P236P") == "QCFPQCFP"
     assert reverse_notation("DPlP") == "623LP"
     assert reverse_notation("qcfS") == "236S"
+    assert reverse_notation("qcfSqcfS") == "236S236S"
 
 
 def test_fuzzy_string() -> None:
