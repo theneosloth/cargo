@@ -10,6 +10,8 @@ from hunting_hawk.mediawiki.cargo import (
     cargo_export,
 )
 
+from hunting_hawk.util.normalize import normalize
+
 WIKI_DOMAIN = "https://wavu.wiki"
 WIKI_INDEX_PATH = "/"
 WIKI_API_PATH = "/w/api.php"
@@ -47,6 +49,12 @@ class StripSuffixFetcher(CargoFetcher):
 
     def get_moves_by_input(self, char: str, input: str) -> list[Move]:
         return super().get_moves_by_input(char + self.valid_table_sufix, input)
+
+    def get_cache_key(self, primary_key: str, move: Move) -> str:
+        if not hasattr(move, "id"):
+            raise Exception(f"Could not find id for {move}")
+        normalized_move = normalize(move.id)
+        return f"moves:{self.table_name}:{primary_key}:{normalized_move}".lower()
 
     def __iter__(self) -> Iterator[Move]:
         iter_params: CargoParameters = {

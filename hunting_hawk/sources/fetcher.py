@@ -26,7 +26,7 @@ from hunting_hawk.mediawiki.filepath import get_file_path
 from hunting_hawk.mediawiki.scrape.scrape import (
     parse_cargo_table as fallback_parse_table,
 )
-from hunting_hawk.util.normalize import fuzzy_string, reverse_notation
+from hunting_hawk.util.normalize import fuzzy_string, reverse_notation, normalize
 
 __all__ = ["CargoFetcher", "MoveDataFetcher"]
 
@@ -48,6 +48,10 @@ class MoveDataFetcher(Mapping[Any, Any]):
     def query(self, query: CargoParameters) -> list[Move]:
         """Return the movelist for matching query QUERY."""
         pass
+
+    @abstractmethod
+    def get_cache_key(self, primary_key: str, move: Move) -> str:
+        """Return a cache key for a given move type"""
 
 
 class CargoFetcher(MoveDataFetcher):
@@ -99,7 +103,8 @@ class CargoFetcher(MoveDataFetcher):
             case list():
                 # TODO: DEFINITELY NUKE THIS
                 # Wiki returns &amp for incomplete codes
-                return [unescape(unescape(link)) for link in val if unescape(unescape(link)).strip()]
+                cleaned_up = [self._parse_wikitext(link) for link in val]
+                return [text for text in cleaned_up if text.strip()]
             case str():
                 return self._parse_wikitext(val)
             case int() | float():
@@ -188,6 +193,12 @@ class CargoFetcher(MoveDataFetcher):
 
     def query(self, query: CargoParameters) -> list[Move]:
         return self._get(query)
+
+    def get_cache_key(self, primary_key: str, move: Move) -> str:
+        if not hasattr(move, "input"):
+            raise Exception(f"Could not find input for {move}")
+        normalized_move = normalize(move.input)
+        return f"moves:{self.table_name}:{primary_key}:{normalized_move}".lower()
 
     def __getitem__(self, char: str) -> list[Move]:
         """Return the movelist for a character CHARA."""

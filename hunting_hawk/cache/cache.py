@@ -84,7 +84,7 @@ class RedisCache(Cache):
 
     def query(self, table_key: str, char: str, query: str) -> Generator[Any, None, None]:
         f = self.client.ft("movesIdx")
-        query = Query(f"@{table_key}:({char}) @input|name:({query})").slop(1)  # type: ignore
+        query = Query(f"@{table_key}:({char}) @id|input|name:({query})").slop(1)  # type: ignore
         res = f.search(query)
         return (r.json for r in res.docs)
 
