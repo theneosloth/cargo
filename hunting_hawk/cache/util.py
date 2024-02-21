@@ -35,6 +35,7 @@ def create_redis_index() -> None:
             TextField("$.chara", as_name="chara", phonetic_matcher="dm:en"),
             TextField("$.name", as_name="name", phonetic_matcher="dm:en"),
             TextField("$.input", as_name="input", phonetic_matcher="dm:en"),
+            TextField("$.id", as_name="id", phonetic_matcher="dm:en"),
         )
 
         rs = c.ft(TABLE_NAME)
