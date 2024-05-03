@@ -169,7 +169,15 @@ def parse_cargo_table(client: Client, table_name: str) -> DataclassProxy:
     except ValidationError as e:
         raise TypeError("Failed to unmarshal the model") from e
 
-    fields = [(k, Optional[to_type(v)], field(default=None)) for k, v in c.cargofields.items()]
+    # Hack until wavu wiki adds an identifier to their data
+    fields = [(k, Optional[to_type(v)], field(default=None)) for k, v in c.cargofields.items()] + [
+        (
+            "_pageName",
+            Optional[str],
+            field(default=None),
+        )
+    ]
+
     result = make_dataclass(table_name, fields, frozen=True)  # type: ignore
     proxy = pydantic_dataclass(result)
 

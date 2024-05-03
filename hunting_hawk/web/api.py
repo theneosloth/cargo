@@ -84,6 +84,7 @@ def get_moves(m: CargoFetcher, tasks: BackgroundTasks) -> Callable[[str, Optiona
                 logging.debug(f"Querying the cache for {move}")
                 if res := list(cache.query(m.default_key, character, move)):
                     # TODO: almost definitely a bottleneck
+                    logging.debug(f"Query succeeded for {move}")
                     return JSONResponse(content=jsonable_encoder([loads(r) for r in res]))
             except Exception as e:
                 logging.error(f"Cache query failed with {e}")

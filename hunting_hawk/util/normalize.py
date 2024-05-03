@@ -5,7 +5,7 @@ from re import sub
 
 def normalize(input: str) -> str:
     unescaped = unescape(input)
-    ascii = sub(r"[^\x00-\x7f]", r"", unescaped)
+    ascii = sub(r"[^\x00-\x7f]", "", unescaped)
     return "".join(ascii.strip().upper().split())
 
 

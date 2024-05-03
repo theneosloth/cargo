@@ -1,6 +1,6 @@
 import logging
 
-from redis.commands.search.field import TextField
+from redis.commands.search.field import TextField, TagField
 from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.exceptions import ConnectionError, ResponseError, TimeoutError
 from requests_cache import CachedSession, RedisCache  # type: ignore
@@ -32,10 +32,11 @@ def create_redis_index() -> None:
             return
 
         schema = (
-            TextField("$.chara", as_name="chara", phonetic_matcher="dm:en"),
+            TagField("$._pageName", as_name="_pageName", separator=";"),
+            TagField("$.chara", as_name="chara", separator=";"),
+            TagField("$.input", as_name="input", separator=";"),
+            TextField("$.id", as_name="id"),
             TextField("$.name", as_name="name", phonetic_matcher="dm:en"),
-            TextField("$.input", as_name="input", phonetic_matcher="dm:en"),
-            TextField("$.id", as_name="id", phonetic_matcher="dm:en"),
         )
 
         rs = c.ft(TABLE_NAME)

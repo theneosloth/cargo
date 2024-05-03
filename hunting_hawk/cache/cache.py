@@ -5,6 +5,7 @@ from typing import Any, Callable, Generator, Optional
 
 import redis
 from redis.commands.search.query import Query
+import string
 
 
 class Cache(ABC):
@@ -84,8 +85,12 @@ class RedisCache(Cache):
 
     def query(self, table_key: str, char: str, query: str) -> Generator[Any, None, None]:
         f = self.client.ft("movesIdx")
-        query = Query(f"@{table_key}:({char}) @id|input|name:({query})").slop(1)  # type: ignore
-        res = f.search(query)
+        table = str.maketrans(dict.fromkeys(string.punctuation))
+        query = query.translate(table)
+        generated_query = f'@{table_key}:{{{char}}} (@name:"{query}")|(@input:{{{query}}})'
+        logging.debug(f"Converted search query into {generated_query}")
+        rd_query = Query(generated_query)
+        res = f.search(rd_query)
         return (r.json for r in res.docs)
 
 
